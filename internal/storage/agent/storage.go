@@ -1,4 +1,4 @@
-package agent_storage
+package agent
 
 // todo По заданию не понял, что должен делать агент с данными, пока завел отдельный Storage
 
