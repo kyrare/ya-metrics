@@ -79,6 +79,12 @@ func TestUpdateHandle(t *testing.T) {
 			UpdateHandle(w, request, tt.storage)
 
 			result := w.Result()
+			defer func() {
+				err := result.Body.Close()
+				if err != nil {
+					panic(err)
+				}
+			}()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
