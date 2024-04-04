@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/kyrare/ya-metrics/internal/agent_storage"
 	"github.com/kyrare/ya-metrics/internal/metrics"
-	"math/rand/v2"
+	"math/rand"
 	"net/http"
 	"time"
 )
