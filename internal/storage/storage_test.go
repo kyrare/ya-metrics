@@ -8,7 +8,7 @@ import (
 func TestMemStorage_UpdateGauge(t *testing.T) {
 	type fields struct {
 		Gauges   map[string]float64
-		Counters map[string][]float64
+		Counters map[string]float64
 	}
 	type args struct {
 		metric string
@@ -24,7 +24,7 @@ func TestMemStorage_UpdateGauge(t *testing.T) {
 			name: "add value",
 			fields: fields{
 				Gauges:   map[string]float64{},
-				Counters: map[string][]float64{},
+				Counters: map[string]float64{},
 			},
 			args: args{
 				metric: "foo",
@@ -40,7 +40,7 @@ func TestMemStorage_UpdateGauge(t *testing.T) {
 				Gauges: map[string]float64{
 					"foo": 1,
 				},
-				Counters: map[string][]float64{},
+				Counters: map[string]float64{},
 			},
 			args: args{
 				metric: "foo",
@@ -64,10 +64,10 @@ func TestMemStorage_UpdateGauge(t *testing.T) {
 	}
 }
 
-func TestMemStorage_UpdateGauge1(t *testing.T) {
+func TestMemStorage_UpdateCounter(t *testing.T) {
 	type fields struct {
 		Gauges   map[string]float64
-		Counters map[string][]float64
+		Counters map[string]float64
 	}
 	type args struct {
 		metric string
@@ -77,36 +77,36 @@ func TestMemStorage_UpdateGauge1(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   map[string][]float64
+		want   map[string]float64
 	}{
 		{
 			name: "add value",
 			fields: fields{
 				Gauges:   map[string]float64{},
-				Counters: map[string][]float64{},
+				Counters: map[string]float64{},
 			},
 			args: args{
 				metric: "foo",
 				value:  1,
 			},
-			want: map[string][]float64{
-				"foo": {1},
+			want: map[string]float64{
+				"foo": 1,
 			},
 		},
 		{
 			name: "add second value",
 			fields: fields{
 				Gauges: map[string]float64{},
-				Counters: map[string][]float64{
-					"foo": {1},
+				Counters: map[string]float64{
+					"foo": 1,
 				},
 			},
 			args: args{
 				metric: "foo",
 				value:  10,
 			},
-			want: map[string][]float64{
-				"foo": {1, 10},
+			want: map[string]float64{
+				"foo": 11,
 			},
 		},
 	}
