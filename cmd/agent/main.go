@@ -1,37 +1,54 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/kyrare/ya-metrics/internal/client"
 	"github.com/kyrare/ya-metrics/internal/metrics"
 	"github.com/kyrare/ya-metrics/internal/storage/agent"
 	"math/rand"
-	"net/http"
+	"strconv"
 	"time"
 )
 
 func main() {
-	storage := agent.MemStorage{
-		Values: make(map[string]float64),
+	addr := flag.String("a", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
+	reportIntervalStr := flag.String("r", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
+	pollIntervalStr := flag.String("p", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
+
+	flag.Parse()
+
+	reportInterval, err := strconv.Atoi(*reportIntervalStr)
+	if err != nil {
+		panic(err)
 	}
+
+	pollInterval, err := strconv.Atoi(*pollIntervalStr)
+	if err != nil {
+		panic(err)
+	}
+
+	storage := agent.NewMemeStorage()
+	c := client.NewClient(*addr)
 
 	lastSendTime := time.Now()
 
 	for {
-		saveRuntimes(&storage)
+		saveRuntimes(storage)
 		storage.Increment("PollCount")
 		storage.Set("RandomValue", rand.Float64())
 
-		if time.Since(lastSendTime) >= (10 * time.Second) {
-			err := sendStorage(storage)
+		if time.Since(lastSendTime) >= (time.Duration(reportInterval) * time.Second) {
+			err := sendStorage(c, storage)
 
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 
 			lastSendTime = time.Now()
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(pollInterval) * time.Second)
 	}
 }
 
@@ -43,33 +60,13 @@ func saveRuntimes(storage agent.Storage) {
 	}
 }
 
-func sendStorage(storage agent.MemStorage) error {
-	for metric, value := range storage.Values {
-		err := sendMetric(metrics.TypeGauge, metric, value)
+func sendStorage(c *client.Client, storage agent.Storage) error {
+	for metric, value := range storage.All() {
+		err := c.Send(metrics.TypeGauge, metric, value)
 
 		if err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func sendMetric(metricType metrics.MetricType, metric string, value float64) error {
-	response, err := http.Post(
-		fmt.Sprintf("http://localhost:8080/update/%s/%s/%v", metricType, metric, value),
-		"text/plain",
-		nil,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	err = response.Body.Close()
-
-	if err != nil {
-		return err
 	}
 
 	return nil

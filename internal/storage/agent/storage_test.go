@@ -33,13 +33,13 @@ func TestMemStorage_set(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &MemStorage{
-				Values: tt.fields.values,
+				values: tt.fields.values,
 			}
 
 			m.Set(tt.args.metric, tt.args.value)
 
-			assert.Contains(t, m.Values, tt.args.metric)
-			assert.Equal(t, m.Values[tt.args.metric], tt.args.value)
+			assert.Contains(t, m.values, tt.args.metric)
+			assert.Equal(t, m.values[tt.args.metric], tt.args.value)
 		})
 	}
 }
@@ -98,12 +98,12 @@ func TestMemStorage_increment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &MemStorage{
-				Values: tt.fields.values,
+				values: tt.fields.values,
 			}
 
 			m.Increment(tt.metric)
-			assert.Contains(t, m.Values, tt.metric)
-			assert.Equal(t, m.Values[tt.metric], tt.actual)
+			assert.Contains(t, m.values, tt.metric)
+			assert.Equal(t, m.values[tt.metric], tt.actual)
 		})
 	}
 }
