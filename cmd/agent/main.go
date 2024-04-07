@@ -6,15 +6,16 @@ import (
 	"github.com/kyrare/ya-metrics/internal/client"
 	"github.com/kyrare/ya-metrics/internal/metrics"
 	"github.com/kyrare/ya-metrics/internal/storage/agent"
+	"github.com/kyrare/ya-metrics/internal/utils"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
 func main() {
-	addr := flag.String("a", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
-	reportIntervalStr := flag.String("r", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
-	pollIntervalStr := flag.String("p", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
+	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
+	reportIntervalStr := utils.GetParameter("r", "REPORT_INTERVAL", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
+	pollIntervalStr := utils.GetParameter("p", "POLL_INTERVAL", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
 
 	flag.Parse()
 
