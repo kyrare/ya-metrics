@@ -1,23 +1,20 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"github.com/kyrare/ya-metrics/internal/handlers"
-	"github.com/kyrare/ya-metrics/internal/utils"
-	"net/http"
+	"github.com/kyrare/ya-metrics/internal/service/server"
 )
 
 func main() {
-	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
+	config, err := server.LoadConfig()
 
-	flag.Parse()
+	if err != nil {
+		panic(err)
+	}
 
-	fmt.Println(*addr)
+	service := server.NewServer(config)
 
-	r := handlers.ServerRouter()
+	err = service.Run()
 
-	err := http.ListenAndServe(*addr, r)
 	if err != nil {
 		panic(err)
 	}

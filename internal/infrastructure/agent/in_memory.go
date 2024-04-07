@@ -1,7 +1,5 @@
 package agent
 
-// todo По заданию не понял, что должен делать агент с данными, пока завел отдельный Storage
-
 type Storage interface {
 	Set(metric string, value float64)
 	Increment(metric string)

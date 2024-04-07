@@ -1,6 +1,8 @@
-package storage
+package metrics
 
-import "github.com/kyrare/ya-metrics/internal/metrics"
+import (
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+)
 
 type Storage interface {
 	UpdateGauge(metric string, value float64)

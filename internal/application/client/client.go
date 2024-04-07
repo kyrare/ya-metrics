@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"github.com/kyrare/ya-metrics/internal/metrics"
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"net/http"
 )
 
