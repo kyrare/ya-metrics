@@ -18,6 +18,6 @@ func main() {
 	err = service.Run()
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 }
