@@ -21,13 +21,7 @@ func (c *Client) Send(metricType metrics.MetricType, metric string, value float6
 		return err
 	}
 
-	err = response.Body.Close()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return response.Body.Close()
 }
 
 func NewClient(serverAddr string) *Client {

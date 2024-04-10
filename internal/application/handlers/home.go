@@ -25,6 +25,6 @@ func (h *Handler) Home(w http.ResponseWriter, _ *http.Request) {
 
 	_, err := w.Write([]byte(result))
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 }
