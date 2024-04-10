@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+	"sync"
 )
 
 type Storage interface {
@@ -15,37 +16,62 @@ type Storage interface {
 type MemStorage struct {
 	Gauges   map[string]float64
 	Counters map[string]float64
+	mu       sync.RWMutex
 }
 
-func (storage *MemStorage) UpdateGauge(metric string, value float64) {
-	storage.Gauges[metric] = value
+func (s *MemStorage) UpdateGauge(metric string, value float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.Gauges[metric] = value
 }
 
-func (storage *MemStorage) UpdateCounter(metric string, value float64) {
-	if _, ok := storage.Counters[metric]; !ok {
-		storage.Counters[metric] = 0
+func (s *MemStorage) UpdateCounter(metric string, value float64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.Counters[metric]; !ok {
+		s.Counters[metric] = 0
 	}
 
-	storage.Counters[metric] += value
+	s.Counters[metric] += value
 }
 
-func (storage *MemStorage) GetGauges() map[string]float64 {
-	return storage.Gauges
+func (s *MemStorage) GetGauges() map[string]float64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	result := make(map[string]float64)
+	for k, v := range s.Gauges {
+		result[k] = v
+	}
+
+	return result
 }
 
-func (storage *MemStorage) GetCounters() map[string]float64 {
-	return storage.Counters
+func (s *MemStorage) GetCounters() map[string]float64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	result := make(map[string]float64)
+	for k, v := range s.Counters {
+		result[k] = v
+	}
+
+	return result
 }
 
-func (storage MemStorage) Get(metricType metrics.MetricType, metric string) (float64, bool) {
+func (s *MemStorage) Get(metricType metrics.MetricType, metric string) (float64, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	if metricType == metrics.TypeGauge {
-		v, ok := storage.Gauges[metric]
+		v, ok := s.Gauges[metric]
 
 		return v, ok
 	}
 
 	if metricType == metrics.TypeCounter {
-		v, ok := storage.Counters[metric]
+		v, ok := s.Counters[metric]
 
 		return v, ok
 	}
