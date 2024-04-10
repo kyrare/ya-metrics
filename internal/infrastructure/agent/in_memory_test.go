@@ -46,51 +46,33 @@ func TestMemStorage_set(t *testing.T) {
 
 func TestMemStorage_increment(t *testing.T) {
 	type fields struct {
-		values map[string]float64
+		counter int
 	}
 
 	tests := []struct {
 		name   string
 		fields fields
-		metric string
-		actual float64
+		actual int
 	}{
-		{
-			name: "Test nil -> 1",
-			fields: fields{
-				values: make(map[string]float64),
-			},
-			metric: "foo",
-			actual: 1,
-		},
 		{
 			name: "Test 0 -> 1",
 			fields: fields{
-				values: map[string]float64{
-					"foo": 0,
-				},
+				counter: 0,
 			},
-			metric: "foo",
 			actual: 1,
 		},
 		{
 			name: "Test 1000 -> 1001",
 			fields: fields{
-				values: map[string]float64{
-					"foo": 1000,
-				},
+				counter: 1000,
 			},
-			metric: "foo",
 			actual: 1001,
 		},
 		{
 			name: "Test -1 -> 0",
 			fields: fields{
-				values: map[string]float64{
-					"foo": -1,
-				},
+				counter: -1,
 			},
-			metric: "foo",
 			actual: 0,
 		},
 	}
@@ -98,12 +80,11 @@ func TestMemStorage_increment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &MemStorage{
-				values: tt.fields.values,
+				counter: tt.fields.counter,
 			}
 
-			m.Increment(tt.metric)
-			assert.Contains(t, m.values, tt.metric)
-			assert.Equal(t, m.values[tt.metric], tt.actual)
+			m.IncrementCounter()
+			assert.Equal(t, m.counter, tt.actual)
 		})
 	}
 }

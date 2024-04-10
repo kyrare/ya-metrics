@@ -2,24 +2,31 @@ package agent
 
 type Storage interface {
 	Set(metric string, value float64)
-	Increment(metric string)
 	All() map[string]float64
+	IncrementCounter()
+	ResetCounter()
+	GetCounter() int
 }
 
 type MemStorage struct {
-	values map[string]float64
+	values  map[string]float64
+	counter int
 }
 
 func (m *MemStorage) Set(metric string, value float64) {
 	m.values[metric] = value
 }
 
-func (m *MemStorage) Increment(metric string) {
-	if v, ok := m.values[metric]; ok {
-		m.values[metric] = v + 1
-	} else {
-		m.values[metric] = 1
-	}
+func (m *MemStorage) IncrementCounter() {
+	m.counter++
+}
+
+func (m *MemStorage) GetCounter() int {
+	return m.counter
+}
+
+func (m *MemStorage) ResetCounter() {
+	m.counter = 0
 }
 
 func (m *MemStorage) All() map[string]float64 {

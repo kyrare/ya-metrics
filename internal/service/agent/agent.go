@@ -20,7 +20,7 @@ func (a *Agent) Run() {
 
 	for {
 		a.saveRuntimes()
-		a.Storage.Increment("PollCount")
+		a.Storage.IncrementCounter()
 		a.Storage.Set("RandomValue", rand.Float64())
 
 		if time.Since(lastSendTime) >= (a.Config.ReportInterval * time.Second) {
@@ -30,6 +30,7 @@ func (a *Agent) Run() {
 				fmt.Println(err)
 			}
 
+			a.Storage.ResetCounter()
 			lastSendTime = time.Now()
 		}
 
@@ -54,7 +55,7 @@ func (a *Agent) sendStorage() error {
 		}
 	}
 
-	return nil
+	return a.Client.Send(metrics.TypeCounter, "PollCount", float64(a.Storage.GetCounter()))
 }
 
 func NewAgent(config Config, storage agent.Storage, client client.Client) *Agent {
