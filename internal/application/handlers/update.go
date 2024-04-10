@@ -11,7 +11,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	metricType := metrics.MetricType(chi.URLParam(r, "metricType"))
 
 	if metricType != metrics.TypeGauge && metricType != metrics.TypeCounter {
-		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -20,7 +19,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}

@@ -14,7 +14,6 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	if metricType != metrics.TypeGauge && metricType != metrics.TypeCounter {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -22,16 +21,15 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 
 	_, err := w.Write([]byte(strconv.FormatFloat(value, 'f', -1, 64)))
 
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 }
