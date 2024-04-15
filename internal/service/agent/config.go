@@ -32,7 +32,7 @@ func LoadConfig() (Config, error) {
 
 	return Config{
 		Address:        *addr,
-		ReportInterval: time.Duration(pollInterval),
-		PollInterval:   time.Duration(reportInterval),
+		ReportInterval: time.Duration(reportInterval),
+		PollInterval:   time.Duration(pollInterval),
 	}, nil
 }
