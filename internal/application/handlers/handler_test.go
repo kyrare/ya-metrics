@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,10 @@ import (
 )
 
 func TestHandler_Home(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+
+	ts := httptest.NewServer(ServerRouter(sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -51,7 +55,10 @@ func TestHandler_Home(t *testing.T) {
 }
 
 func TestHandler_Get(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+
+	ts := httptest.NewServer(ServerRouter(sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -105,7 +112,10 @@ func TestHandler_Get(t *testing.T) {
 }
 
 func TestHandler_Update(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+
+	ts := httptest.NewServer(ServerRouter(sugar))
 	defer ts.Close()
 
 	type want struct {

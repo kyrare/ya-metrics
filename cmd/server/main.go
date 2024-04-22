@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/kyrare/ya-metrics/internal/service/server"
+	"go.uber.org/zap"
 	"log"
 )
 
@@ -13,7 +14,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	service := server.NewServer(config)
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logger.Sync()
+
+	// делаем регистратор SugaredLogger
+	sugar := *logger.Sugar()
+
+	service := server.NewServer(config, sugar)
 
 	err = service.Run()
 
