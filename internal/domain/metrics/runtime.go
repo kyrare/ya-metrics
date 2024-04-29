@@ -16,6 +16,7 @@ func GetRuntimes() map[string]float64 {
 		"HeapAlloc":     float64(m.HeapAlloc),
 		"HeapIdle":      float64(m.HeapIdle),
 		"HeapInuse":     float64(m.HeapInuse),
+		"HeapObjects":   float64(m.HeapObjects),
 		"HeapReleased":  float64(m.HeapReleased),
 		"HeapSys":       float64(m.HeapSys),
 		"LastGC":        float64(m.LastGC),
