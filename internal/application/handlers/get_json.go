@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (h *Handler) GetJson(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetJSON(w http.ResponseWriter, r *http.Request) {
 	var request metrics.Metrics
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -30,7 +30,7 @@ func (h *Handler) GetJson(w http.ResponseWriter, r *http.Request) {
 
 	response := metrics.NewMetrics(metricType, request.ID, value)
 
-	responseJson, err := json.Marshal(response)
+	responseJSON, err := json.Marshal(response)
 
 	if err != nil {
 		h.logger.Error("Не удалось сконвертировать response в json", response)
@@ -41,7 +41,7 @@ func (h *Handler) GetJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	_, err = w.Write(responseJson)
+	_, err = w.Write(responseJSON)
 
 	if err != nil {
 		h.logger.Error(err)

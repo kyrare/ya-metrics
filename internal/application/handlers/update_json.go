@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (h *Handler) UpdateJson(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 	var request metrics.Metrics
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -41,7 +41,7 @@ func (h *Handler) UpdateJson(w http.ResponseWriter, r *http.Request) {
 
 	responseData := metrics.NewMetrics(metricType, request.ID, value)
 
-	responseJson, err := json.Marshal(responseData)
+	responseJSON, err := json.Marshal(responseData)
 
 	if err != nil {
 		h.logger.Error("Не удалось сконвертировать responseData в json", responseData)
@@ -52,7 +52,7 @@ func (h *Handler) UpdateJson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	_, err = w.Write(responseJson)
+	_, err = w.Write(responseJSON)
 
 	if err != nil {
 		h.logger.Error(err)

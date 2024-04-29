@@ -31,7 +31,7 @@ func ServerRouter(logger zap.SugaredLogger) chi.Router {
 	r.Get("/value/{metricType}/{metric}", h.Get)
 	r.Post("/update/{metricType}/{metric}/{value}", h.Update)
 
-	r.Post("/value/", h.GetJson)
-	r.Post("/update/", h.UpdateJson)
+	r.Post("/value/", h.GetJSON)
+	r.Post("/update/", h.UpdateJSON)
 	return r
 }

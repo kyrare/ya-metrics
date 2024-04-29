@@ -18,7 +18,7 @@ type Client struct {
 func (c *Client) Send(metricType metrics.MetricType, metric string, value float64) error {
 	bodyData := metrics.NewMetrics(metricType, metric, value)
 
-	bodyJson, err := json.Marshal(bodyData)
+	bodyJSON, err := json.Marshal(bodyData)
 
 	if err != nil {
 		c.Logger.Error("Не удалось сконвертировать body в json", bodyData)
@@ -30,16 +30,16 @@ func (c *Client) Send(metricType metrics.MetricType, metric string, value float6
 	c.Logger.Infoln(
 		"Начало выполнение запроса",
 		"uri", uri,
-		"body", string(bodyJson),
+		"body", string(bodyJSON),
 		"method", "POST",
 	)
 
-	body := bytes.NewBuffer(bodyJson)
+	body := bytes.NewBuffer(bodyJSON)
 
 	response, err := http.Post(uri, "application/json", body)
 
 	if err != nil {
-		c.Logger.Error("Произошла ошибка отправки данных", err, response, string(bodyJson))
+		c.Logger.Error("Произошла ошибка отправки данных", err, response, string(bodyJSON))
 		return err
 	}
 
