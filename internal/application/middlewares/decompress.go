@@ -36,7 +36,6 @@ func Decompress(h http.Handler) http.Handler {
 		zr, err := gzip.NewReader(r.Body)
 
 		if err != nil {
-			fmt.Println("ALARM1!", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -44,12 +43,6 @@ func Decompress(h http.Handler) http.Handler {
 		cr := &compressReader{
 			r:  r.Body,
 			zr: zr,
-		}
-
-		if err != nil {
-			fmt.Println("ALARM2!", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
 
 		r.Body = cr
