@@ -10,17 +10,18 @@ import (
 
 type Handler struct {
 	storage metrics.Storage
+	logger  zap.SugaredLogger
 }
 
-func NewHandler(storage metrics.Storage) *Handler {
-	return &Handler{storage: storage}
+func NewHandler(storage metrics.Storage, logger zap.SugaredLogger) *Handler {
+	return &Handler{storage: storage, logger: logger}
 }
 
 func ServerRouter(logger zap.SugaredLogger) chi.Router {
 	r := chi.NewRouter()
 
 	s := metrics.NewMemStorage()
-	h := NewHandler(s)
+	h := NewHandler(s, logger)
 
 	r.Use(func(handler http.Handler) http.Handler {
 		return middlewares.WithLogging(handler, logger)
@@ -30,5 +31,7 @@ func ServerRouter(logger zap.SugaredLogger) chi.Router {
 	r.Get("/value/{metricType}/{metric}", h.Get)
 	r.Post("/update/{metricType}/{metric}/{value}", h.Update)
 
+	r.Post("/value/", h.GetJson)
+	r.Post("/update/", h.UpdateJson)
 	return r
 }

@@ -27,7 +27,7 @@ func main() {
 	s := agentStorage.NewMemeStorage()
 	cl := client.NewClient(c.Address, sugar)
 
-	service := agent.NewAgent(c, s, *cl)
+	service := agent.NewAgent(c, s, *cl, sugar)
 
 	service.Run()
 }
