@@ -26,6 +26,8 @@ func ServerRouter(logger zap.SugaredLogger) chi.Router {
 	r.Use(func(handler http.Handler) http.Handler {
 		return middlewares.WithLogging(handler, logger)
 	})
+	r.Use(middlewares.Compress)
+	r.Use(middlewares.Decompress)
 
 	r.Get("/", h.Home)
 	r.Get("/value/{metricType}/{metric}", h.Get)

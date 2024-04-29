@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+	"github.com/kyrare/ya-metrics/internal/infrastructure/compress"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -34,9 +35,26 @@ func (c *Client) Send(metricType metrics.MetricType, metric string, value float6
 		"method", "POST",
 	)
 
+	bodyJSON, err = compress.Compress(bodyJSON)
+
+	if err != nil {
+		c.Logger.Error("Произошла ошибка сжатия данных", err)
+		return err
+	}
+
 	body := bytes.NewBuffer(bodyJSON)
 
-	response, err := http.Post(uri, "application/json", body)
+	req, err := http.NewRequest("POST", uri, body)
+
+	if err != nil {
+		c.Logger.Error("Не удалось создать реквест")
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Encoding", "gzip")
+
+	response, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		c.Logger.Error("Произошла ошибка отправки данных", err, response, string(bodyJSON))
@@ -62,6 +80,16 @@ func bodySize(body io.ReadCloser) int {
 	}
 
 	return len(bytes)
+}
+
+func bodyToString(body io.ReadCloser) string {
+	bytes, err := io.ReadAll(body)
+
+	if err != nil {
+		return ""
+	}
+
+	return string(bytes)
 }
 
 func NewClient(serverAddr string, logger zap.SugaredLogger) *Client {
