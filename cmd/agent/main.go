@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/kyrare/ya-metrics/internal/application/client"
 	agentStorage "github.com/kyrare/ya-metrics/internal/infrastructure/agent"
 	"github.com/kyrare/ya-metrics/internal/service/agent"
@@ -9,13 +10,13 @@ import (
 )
 
 func main() {
-	c, err := agent.LoadConfig()
+	config, err := agent.LoadConfig()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	logger, err := zap.NewDevelopment()
+	logger, err := createLogger(config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,9 +26,20 @@ func main() {
 	sugar := *logger.Sugar()
 
 	s := agentStorage.NewMemeStorage()
-	cl := client.NewClient(c.Address, sugar)
+	cl := client.NewClient(config.Address, sugar)
 
-	service := agent.NewAgent(c, s, *cl, sugar)
+	service := agent.NewAgent(config, s, *cl, sugar)
 
 	service.Run()
+}
+
+func createLogger(c agent.Config) (*zap.Logger, error) {
+	switch c.AppEnv {
+	case "development":
+		return zap.NewDevelopment()
+	case "production":
+		return zap.NewProduction()
+	default:
+		return nil, fmt.Errorf("неизвестный APP_ENV %s", c.AppEnv)
+	}
 }

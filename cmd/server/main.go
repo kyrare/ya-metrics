@@ -17,7 +17,7 @@ func main() {
 
 	storage := metrics.NewMemStorage(config.FileStoragePath)
 
-	logger, err := zap.NewDevelopment()
+	logger, err := createLogger(config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,5 +32,16 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+func createLogger(c server.Config) (*zap.Logger, error) {
+	switch c.AppEnv {
+	case "development":
+		return zap.NewDevelopment()
+	case "production":
+		return zap.NewProduction()
+	default:
+		return nil, fmt.Errorf("неизвестный APP_ENV %s", c.AppEnv)
 	}
 }
