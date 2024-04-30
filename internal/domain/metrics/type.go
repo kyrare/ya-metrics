@@ -29,7 +29,7 @@ func NewMetrics(metricType MetricType, metric string, value float64) (*Metrics, 
 		v := int64(value)
 		m.Delta = &v
 	default:
-		return nil, fmt.Errorf("Неизвестынй тип метрики %s", metricType)
+		return nil, fmt.Errorf("неизвестный тип метрики %s", metricType)
 	}
 
 	return m, nil
