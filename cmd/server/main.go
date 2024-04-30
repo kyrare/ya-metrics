@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/kyrare/ya-metrics/internal/service/server"
 	"go.uber.org/zap"
 	"log"
@@ -14,6 +15,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	storage := metrics.NewMemStorage(config.FileStoragePath)
+
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatal(err)
@@ -23,7 +26,7 @@ func main() {
 	// делаем регистратор SugaredLogger
 	sugar := *logger.Sugar()
 
-	service := server.NewServer(config, sugar)
+	service := server.NewServer(config, storage, sugar)
 
 	err = service.Run()
 

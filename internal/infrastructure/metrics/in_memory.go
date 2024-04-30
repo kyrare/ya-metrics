@@ -1,7 +1,12 @@
 package metrics
 
 import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+	"os"
 	"sync"
 )
 
@@ -11,12 +16,21 @@ type Storage interface {
 	GetGauges() map[string]float64
 	GetCounters() map[string]float64
 	Get(metricType metrics.MetricType, metric string) (float64, bool)
+	Store() error
+	Restore() error
+}
+
+type StorageData struct {
+	Gauges   map[string]float64 `json:"gauges"`
+	Counters map[string]float64 `json:"counters"`
 }
 
 type MemStorage struct {
 	Gauges   map[string]float64
 	Counters map[string]float64
 	mu       sync.RWMutex
+	fileMu   sync.RWMutex
+	filePath string
 }
 
 func (s *MemStorage) UpdateGauge(metric string, value float64) {
@@ -79,9 +93,87 @@ func (s *MemStorage) Get(metricType metrics.MetricType, metric string) (float64,
 	return 0, false
 }
 
-func NewMemStorage() *MemStorage {
+func (s *MemStorage) Store() error {
+	if len(s.filePath) == 0 {
+		return nil
+	}
+
+	data := &StorageData{
+		Gauges:   s.Gauges,
+		Counters: s.Counters,
+	}
+
+	dataJSON, err := json.Marshal(data)
+
+	if err != nil {
+		return err
+	}
+
+	dataJSON = append(dataJSON, '\n')
+
+	s.fileMu.Lock()
+	defer s.fileMu.Unlock()
+
+	file, err := os.OpenFile(s.filePath, os.O_WRONLY|os.O_CREATE, 0644)
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(dataJSON)
+
+	return err
+}
+
+func (s *MemStorage) Restore() error {
+	if len(s.filePath) == 0 {
+		return nil
+	}
+
+	// проверяем, что файл существует
+	if _, err := os.Stat(s.filePath); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	s.fileMu.RLock()
+	defer s.fileMu.RUnlock()
+
+	file, err := os.Open(s.filePath)
+
+	if err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(file)
+	b, err := reader.ReadBytes('\n')
+
+	if err != nil {
+		return err
+	}
+
+	data := StorageData{}
+	err = json.Unmarshal(b, &data)
+
+	if err != nil {
+		return err
+	}
+
+	s.Gauges = data.Gauges
+	s.Counters = data.Counters
+
+	return nil
+}
+
+func NewMemStorage(filePath string) *MemStorage {
 	return &MemStorage{
 		Gauges:   make(map[string]float64),
 		Counters: make(map[string]float64),
+		filePath: filePath,
 	}
 }

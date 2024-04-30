@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -13,8 +14,9 @@ import (
 func TestHandler_Home(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
+	storage := metrics.NewMemStorage("")
 
-	ts := httptest.NewServer(ServerRouter(sugar))
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -57,8 +59,9 @@ func TestHandler_Home(t *testing.T) {
 func TestHandler_Get(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
+	storage := metrics.NewMemStorage("")
 
-	ts := httptest.NewServer(ServerRouter(sugar))
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -114,8 +117,9 @@ func TestHandler_Get(t *testing.T) {
 func TestHandler_Update(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
+	storage := metrics.NewMemStorage("")
 
-	ts := httptest.NewServer(ServerRouter(sugar))
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {

@@ -33,4 +33,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
+
+	if h.storeStorageOnHit {
+		err := h.storage.Store()
+		if err != nil {
+			h.logger.Error(err)
+		}
+	}
 }

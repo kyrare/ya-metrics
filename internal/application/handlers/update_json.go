@@ -61,4 +61,11 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error(err)
 	}
+
+	if h.storeStorageOnHit {
+		err := h.storage.Store()
+		if err != nil {
+			h.logger.Error(err)
+		}
+	}
 }
