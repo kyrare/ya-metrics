@@ -35,12 +35,16 @@ func (s *Server) storageStore() {
 		return
 	}
 
+	ticker := time.NewTicker(s.Config.StoreInterval * time.Second)
+
 	go func() {
 		for {
-			time.Sleep(s.Config.StoreInterval * time.Second)
-			err := s.Storage.Store()
-			if err != nil {
-				s.Logger.Error(err)
+			select {
+			case <-ticker.C:
+				err := s.Storage.Store()
+				if err != nil {
+					s.Logger.Error(err)
+				}
 			}
 		}
 	}()
