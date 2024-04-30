@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"net/http"
+
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
 func (h *Handler) GetJSON(w http.ResponseWriter, r *http.Request) {

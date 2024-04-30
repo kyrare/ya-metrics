@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/kyrare/ya-metrics/internal/service/server"
 	"go.uber.org/zap"
-	"log"
 )
 
 func main() {

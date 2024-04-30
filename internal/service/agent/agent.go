@@ -1,12 +1,13 @@
 package agent
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/kyrare/ya-metrics/internal/application/client"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/agent"
 	"go.uber.org/zap"
-	"math/rand"
-	"time"
 )
 
 type Agent struct {

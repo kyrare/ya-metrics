@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {

@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/kyrare/ya-metrics/internal/application/middlewares"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type Handler struct {

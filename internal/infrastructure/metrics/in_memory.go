@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"os"
 	"sync"
+
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
 type Storage interface {

@@ -2,9 +2,10 @@ package server
 
 import (
 	"flag"
-	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	"strconv"
 	"time"
+
+	"github.com/kyrare/ya-metrics/internal/domain/utils"
 )
 
 type Config struct {

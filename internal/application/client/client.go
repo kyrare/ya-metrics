@@ -3,11 +3,12 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/compress"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
 )
 
 type Client struct {

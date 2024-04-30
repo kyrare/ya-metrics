@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestHandler_Home(t *testing.T) {

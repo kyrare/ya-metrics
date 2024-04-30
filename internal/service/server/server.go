@@ -1,11 +1,12 @@
 package server
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/kyrare/ya-metrics/internal/application/handlers"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 )
 
 type Server struct {
