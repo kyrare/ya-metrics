@@ -1,5 +1,7 @@
 package metrics
 
+import "fmt"
+
 type MetricType string
 
 const (
@@ -14,18 +16,21 @@ type Metrics struct {
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
-func NewMetrics(metricType MetricType, metric string, value float64) *Metrics {
+func NewMetrics(metricType MetricType, metric string, value float64) (*Metrics, error) {
 	m := &Metrics{
 		ID:    metric,
 		MType: string(metricType),
 	}
 
-	if metricType == TypeGauge {
+	switch metricType {
+	case TypeGauge:
 		m.Value = &value
-	} else {
+	case TypeCounter:
 		v := int64(value)
 		m.Delta = &v
+	default:
+		return nil, fmt.Errorf("Неизвестынй тип метрики %s", metricType)
 	}
 
-	return m
+	return m, nil
 }

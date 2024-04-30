@@ -43,7 +43,13 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 
 	value, _ := h.storage.Get(metricType, request.ID)
 
-	responseData := metrics.NewMetrics(metricType, request.ID, value)
+	responseData, err := metrics.NewMetrics(metricType, request.ID, value)
+
+	if err != nil {
+		h.logger.Error(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
 	responseJSON, err := json.Marshal(responseData)
 

@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/compress"
 	"go.uber.org/zap"
@@ -17,7 +16,12 @@ type Client struct {
 }
 
 func (c *Client) Send(metricType metrics.MetricType, metric string, value float64) error {
-	bodyData := metrics.NewMetrics(metricType, metric, value)
+	bodyData, err := metrics.NewMetrics(metricType, metric, value)
+
+	if err != nil {
+		c.Logger.Error(err)
+		return err
+	}
 
 	bodyJSON, err := json.Marshal(bodyData)
 
@@ -26,7 +30,7 @@ func (c *Client) Send(metricType metrics.MetricType, metric string, value float6
 		return err
 	}
 
-	uri := fmt.Sprintf("http://%s/update/", c.serverAddr)
+	uri := "http://" + c.serverAddr + "/update/"
 
 	c.Logger.Infoln(
 		"Начало выполнение запроса",
@@ -74,22 +78,13 @@ func (c *Client) Send(metricType metrics.MetricType, metric string, value float6
 
 func bodySize(body io.ReadCloser) int {
 	bytes, err := io.ReadAll(body)
+	defer body.Close()
 
 	if err != nil {
 		return 0
 	}
 
 	return len(bytes)
-}
-
-func bodyToString(body io.ReadCloser) string {
-	bytes, err := io.ReadAll(body)
-
-	if err != nil {
-		return ""
-	}
-
-	return string(bytes)
 }
 
 func NewClient(serverAddr string, logger zap.SugaredLogger) *Client {

@@ -28,7 +28,13 @@ func (h *Handler) GetJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := metrics.NewMetrics(metricType, request.ID, value)
+	response, err := metrics.NewMetrics(metricType, request.ID, value)
+
+	if err != nil {
+		h.logger.Error(err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
 	responseJSON, err := json.Marshal(response)
 
