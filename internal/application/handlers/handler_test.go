@@ -15,7 +15,8 @@ import (
 func TestHandler_Home(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
-	storage := metrics.NewMemStorage("")
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
 
 	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
@@ -60,7 +61,8 @@ func TestHandler_Home(t *testing.T) {
 func TestHandler_Get(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
-	storage := metrics.NewMemStorage("")
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
 
 	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
@@ -118,7 +120,8 @@ func TestHandler_Get(t *testing.T) {
 func TestHandler_Update(t *testing.T) {
 	logger := zap.New(nil)
 	sugar := *logger.Sugar()
-	storage := metrics.NewMemStorage("")
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
 
 	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()

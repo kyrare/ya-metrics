@@ -10,14 +10,10 @@ import (
 func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 	var request metrics.Metrics
 
-	h.logger.Infof("Test1: %v", request)
-
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-
-	h.logger.Infof("Test2: %v", request)
 
 	metricType := metrics.MetricType(request.MType)
 

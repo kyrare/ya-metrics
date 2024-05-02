@@ -3,12 +3,12 @@ package metrics
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
-	"fmt"
+	"io"
 	"os"
 	"sync"
 
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+	"go.uber.org/zap"
 )
 
 type Storage interface {
@@ -19,6 +19,8 @@ type Storage interface {
 	Get(metricType metrics.MetricType, metric string) (float64, bool)
 	Store() error
 	Restore() error
+	Close() error
+	StoreAndClose() error
 }
 
 type StorageData struct {
@@ -31,7 +33,8 @@ type MemStorage struct {
 	Counters map[string]float64
 	mu       sync.RWMutex
 	fileMu   sync.RWMutex
-	filePath string
+	file     *os.File
+	logger   zap.SugaredLogger
 }
 
 func (s *MemStorage) UpdateGauge(metric string, value float64) {
@@ -95,9 +98,15 @@ func (s *MemStorage) Get(metricType metrics.MetricType, metric string) (float64,
 }
 
 func (s *MemStorage) Store() error {
-	if len(s.filePath) == 0 {
+	s.logger.Infoln("Start store to file - ", s.file.Name())
+
+	if s.file == nil {
+		s.logger.Infoln("No file for store")
 		return nil
 	}
+
+	s.fileMu.Lock()
+	defer s.fileMu.Unlock()
 
 	data := &StorageData{
 		Gauges:   s.Gauges,
@@ -112,51 +121,42 @@ func (s *MemStorage) Store() error {
 
 	dataJSON = append(dataJSON, '\n')
 
-	s.fileMu.Lock()
-	defer s.fileMu.Unlock()
+	s.logger.Infoln("Data for store", string(dataJSON))
 
-	file, err := os.OpenFile(s.filePath, os.O_WRONLY|os.O_CREATE, 0644)
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
+	err = clearFileAndWriteIntoHim(s.file, dataJSON)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = file.Write(dataJSON)
+	s.logger.Infoln("Store to file success")
 
-	return err
+	return nil
 }
 
 func (s *MemStorage) Restore() error {
-	if len(s.filePath) == 0 {
+	s.logger.Infoln("Start restore from file ", s.file.Name())
+
+	if s.file == nil {
+		s.logger.Infoln("No file for restore")
 		return nil
 	}
 
-	// проверяем, что файл существует
-	if _, err := os.Stat(s.filePath); errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
+	s.fileMu.Lock()
+	defer s.fileMu.Unlock()
 
-	s.fileMu.RLock()
-	defer s.fileMu.RUnlock()
-
-	file, err := os.Open(s.filePath)
-
-	if err != nil {
-		return err
-	}
-
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(s.file)
 	b, err := reader.ReadBytes('\n')
 
-	if err != nil {
+	// если файл просто пустой, то это нормально, просто нет данных для восстановления
+	if err == io.EOF {
+		s.logger.Infoln("Empty file for restore")
+		return nil
+	} else if err != nil {
 		return err
 	}
+
+	s.logger.Infoln("Loaded data for restore ", string(b))
 
 	data := StorageData{}
 	err = json.Unmarshal(b, &data)
@@ -165,16 +165,79 @@ func (s *MemStorage) Restore() error {
 		return err
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.Gauges = data.Gauges
 	s.Counters = data.Counters
+
+	s.logger.Infoln("End restore from file")
 
 	return nil
 }
 
-func NewMemStorage(filePath string) *MemStorage {
+func (s *MemStorage) Close() error {
+	if s.file == nil {
+		return nil
+	}
+
+	s.logger.Infoln("Close file")
+
+	return s.file.Close()
+}
+
+func (s *MemStorage) StoreAndClose() error {
+	s.logger.Infoln("StoreAndClose")
+	err := s.Store()
+	if err != nil {
+		return err
+	}
+	return s.Close()
+}
+
+func NewMemStorage(filePath string, logger zap.SugaredLogger) (*MemStorage, error) {
+	file, err := openFile(filePath)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &MemStorage{
 		Gauges:   make(map[string]float64),
 		Counters: make(map[string]float64),
-		filePath: filePath,
+		file:     file,
+		logger:   logger,
+	}, nil
+}
+
+func openFile(filePath string) (*os.File, error) {
+	if len(filePath) == 0 {
+		return nil, nil
 	}
+
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func clearFileAndWriteIntoHim(f *os.File, b []byte) error {
+	err := f.Truncate(0)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Seek(0, 0)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(b)
+
+	return err
 }

@@ -38,6 +38,8 @@ func (s *Server) storageStore() {
 
 	ticker := time.NewTicker(s.Config.StoreInterval * time.Second)
 
+	s.Logger.Info("Store will be saved by interval, interval - ", s.Config.StoreInterval)
+
 	go func() {
 		for range ticker.C {
 			err := s.Storage.Store()

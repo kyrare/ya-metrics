@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/kyrare/ya-metrics/internal/service/server"
@@ -16,8 +19,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	storage := metrics.NewMemStorage(config.FileStoragePath)
-
 	logger, err := createLogger(config)
 	if err != nil {
 		log.Fatal(err)
@@ -26,6 +27,28 @@ func main() {
 
 	// делаем регистратор SugaredLogger
 	sugar := *logger.Sugar()
+
+	storage, err := metrics.NewMemStorage(config.FileStoragePath, sugar)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err := storage.StoreAndClose()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		err := storage.StoreAndClose()
+		if err != nil {
+			sugar.Error(err)
+		}
+		os.Exit(0)
+	}()
 
 	service := server.NewServer(config, storage, sugar)
 
