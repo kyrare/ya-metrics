@@ -2,21 +2,24 @@ package agent
 
 import (
 	"flag"
-	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	"strconv"
 	"time"
+
+	"github.com/kyrare/ya-metrics/internal/domain/utils"
 )
 
 type Config struct {
 	Address        string
 	ReportInterval time.Duration
 	PollInterval   time.Duration
+	AppEnv         string
 }
 
 func LoadConfig() (Config, error) {
 	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
 	reportIntervalStr := utils.GetParameter("r", "REPORT_INTERVAL", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	pollIntervalStr := utils.GetParameter("p", "POLL_INTERVAL", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
+	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
 
 	flag.Parse()
 
@@ -34,5 +37,6 @@ func LoadConfig() (Config, error) {
 		Address:        *addr,
 		ReportInterval: time.Duration(reportInterval),
 		PollInterval:   time.Duration(pollInterval),
+		AppEnv:         *appEnv,
 	}, nil
 }

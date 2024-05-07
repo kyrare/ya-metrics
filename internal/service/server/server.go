@@ -1,22 +1,59 @@
 package server
 
 import (
-	"github.com/kyrare/ya-metrics/internal/application/handlers"
 	"net/http"
+	"time"
+
+	"github.com/kyrare/ya-metrics/internal/application/handlers"
+	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
+	"go.uber.org/zap"
 )
 
 type Server struct {
-	Config Config
+	Config  Config
+	Storage metrics.Storage
+	Logger  zap.SugaredLogger
 }
 
 func (s *Server) Run() error {
-	r := handlers.ServerRouter()
+	if s.Config.Restore {
+		err := s.Storage.Restore()
 
-	return http.ListenAndServe(s.Config.address, r)
+		if err != nil {
+			return err
+		}
+	}
+
+	s.storageStore()
+
+	r := handlers.ServerRouter(s.Storage, s.Config.StoreInterval == 0, s.Logger)
+
+	return http.ListenAndServe(s.Config.Address, r)
 }
 
-func NewServer(config Config) *Server {
+func (s *Server) storageStore() {
+	if s.Config.StoreInterval == 0 {
+		return
+	}
+
+	ticker := time.NewTicker(s.Config.StoreInterval * time.Second)
+
+	s.Logger.Info("Store will be saved by interval, interval - ", s.Config.StoreInterval)
+
+	go func() {
+		for range ticker.C {
+			err := s.Storage.Store()
+			if err != nil {
+				s.Logger.Error(err)
+			}
+		}
+	}()
+}
+
+func NewServer(config Config, storage metrics.Storage, logger zap.SugaredLogger) *Server {
 	return &Server{
-		Config: config,
+		Config:  config,
+		Storage: storage,
+		Logger:  logger,
 	}
 }

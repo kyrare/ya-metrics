@@ -1,23 +1,46 @@
 package main
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/kyrare/ya-metrics/internal/application/client"
 	agentStorage "github.com/kyrare/ya-metrics/internal/infrastructure/agent"
 	"github.com/kyrare/ya-metrics/internal/service/agent"
-	"log"
+	"go.uber.org/zap"
 )
 
 func main() {
-	c, err := agent.LoadConfig()
+	config, err := agent.LoadConfig()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s := agentStorage.NewMemeStorage()
-	cl := client.NewClient(c.Address)
+	logger, err := createLogger(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logger.Sync()
 
-	service := agent.NewAgent(c, s, *cl)
+	// делаем регистратор SugaredLogger
+	sugar := *logger.Sugar()
+
+	s := agentStorage.NewMemeStorage()
+	cl := client.NewClient(config.Address, sugar)
+
+	service := agent.NewAgent(config, s, *cl, sugar)
 
 	service.Run()
+}
+
+func createLogger(c agent.Config) (*zap.Logger, error) {
+	switch c.AppEnv {
+	case "development":
+		return zap.NewDevelopment()
+	case "production":
+		return zap.NewProduction()
+	default:
+		return nil, fmt.Errorf("неизвестный APP_ENV %s", c.AppEnv)
+	}
 }

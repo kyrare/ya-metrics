@@ -1,18 +1,20 @@
 package agent
 
 import (
-	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/kyrare/ya-metrics/internal/application/client"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/agent"
-	"math/rand"
-	"time"
+	"go.uber.org/zap"
 )
 
 type Agent struct {
 	Config  Config
 	Storage agent.Storage
 	Client  client.Client
+	Logger  zap.SugaredLogger
 }
 
 func (a *Agent) Run() {
@@ -27,7 +29,7 @@ func (a *Agent) Run() {
 			err := a.sendStorage()
 
 			if err != nil {
-				fmt.Println(err)
+				a.Logger.Error(err)
 			}
 
 			a.Storage.ResetCounter()
@@ -58,10 +60,11 @@ func (a *Agent) sendStorage() error {
 	return a.Client.Send(metrics.TypeCounter, "PollCount", float64(a.Storage.GetCounter()))
 }
 
-func NewAgent(config Config, storage agent.Storage, client client.Client) *Agent {
+func NewAgent(config Config, storage agent.Storage, client client.Client, logger zap.SugaredLogger) *Agent {
 	return &Agent{
 		Config:  config,
 		Storage: storage,
 		Client:  client,
+		Logger:  logger,
 	}
 }

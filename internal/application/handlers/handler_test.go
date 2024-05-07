@@ -1,16 +1,24 @@
 package handlers
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestHandler_Home(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
+
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -51,7 +59,12 @@ func TestHandler_Home(t *testing.T) {
 }
 
 func TestHandler_Get(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
+
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -105,7 +118,12 @@ func TestHandler_Get(t *testing.T) {
 }
 
 func TestHandler_Update(t *testing.T) {
-	ts := httptest.NewServer(ServerRouter())
+	logger := zap.New(nil)
+	sugar := *logger.Sugar()
+	storage, err := metrics.NewMemStorage("", sugar)
+	assert.NoError(t, err, "Не удалось создать storage")
+
+	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
 	defer ts.Close()
 
 	type want struct {

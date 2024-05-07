@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +30,6 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte(strconv.FormatFloat(value, 'f', -1, 64)))
 
 	if err != nil {
-		fmt.Println(err)
+		h.logger.Error(err)
 	}
 }
