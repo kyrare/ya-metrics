@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 type Server struct {
 	Config  Config
 	Storage metrics.Storage
+	DB      *sql.DB
 	Logger  zap.SugaredLogger
 }
 
@@ -26,7 +28,7 @@ func (s *Server) Run() error {
 
 	s.storageStore()
 
-	r := handlers.ServerRouter(s.Storage, s.Config.StoreInterval == 0, s.Logger)
+	r := handlers.ServerRouter(s.Storage, s.DB, s.Config.StoreInterval == 0, s.Logger)
 
 	return http.ListenAndServe(s.Config.Address, r)
 }
@@ -50,10 +52,11 @@ func (s *Server) storageStore() {
 	}()
 }
 
-func NewServer(config Config, storage metrics.Storage, logger zap.SugaredLogger) *Server {
+func NewServer(config Config, storage metrics.Storage, db *sql.DB, logger zap.SugaredLogger) *Server {
 	return &Server{
 		Config:  config,
 		Storage: storage,
+		DB:      db,
 		Logger:  logger,
 	}
 }

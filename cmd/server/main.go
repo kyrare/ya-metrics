@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kyrare/ya-metrics/internal/infrastructure/connection"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/kyrare/ya-metrics/internal/service/server"
 	"go.uber.org/zap"
@@ -39,6 +40,17 @@ func main() {
 		}
 	}()
 
+	db, err := connection.New(config.DatabaseDsn, sugar)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -50,7 +62,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	service := server.NewServer(config, storage, sugar)
+	service := server.NewServer(config, storage, db, sugar)
 
 	err = service.Run()
 
