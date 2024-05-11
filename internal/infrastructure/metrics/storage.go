@@ -12,4 +12,5 @@ type Storage interface {
 	Restore() error
 	Close() error
 	StoreAndClose() error
+	Updates(values []metrics.Metrics) error
 }

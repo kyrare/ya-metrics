@@ -44,5 +44,7 @@ func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, logg
 
 	r.Post("/value/", h.GetJSON)
 	r.Post("/update/", h.UpdateJSON)
+
+	r.Post("/updates/", h.UpdatesJSON)
 	return r
 }

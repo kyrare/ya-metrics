@@ -3,6 +3,7 @@ package metrics
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -40,6 +41,20 @@ func (s *MemStorage) UpdateCounter(metric string, value float64) {
 	}
 
 	s.Counters[metric] += value
+}
+
+func (s *MemStorage) Updates(values []metrics.Metrics) error {
+	for _, metric := range values {
+		if metric.MType == string(metrics.TypeGauge) {
+			s.UpdateGauge(metric.ID, *metric.Value)
+		} else if metric.MType == string(metrics.TypeCounter) {
+			s.UpdateCounter(metric.ID, float64(*metric.Delta))
+		} else {
+			return fmt.Errorf("неизвестный тип метрики %v", metric.MType)
+		}
+	}
+
+	return nil
 }
 
 func (s *MemStorage) GetGauges() map[string]float64 {

@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"go.uber.org/zap"
@@ -14,36 +15,61 @@ type DatabaseStorage struct {
 	logger zap.SugaredLogger
 }
 
+type Query interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
 func (s *DatabaseStorage) init() error {
-	_, err := s.db.ExecContext(s.ctx, "CREATE TABLE IF NOT EXISTS metrics (id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, type VARCHAR(255), name VARCHAR(255) not null, value REAL not null default 0)")
+	_, err := s.db.ExecContext(s.ctx, "CREATE TABLE IF NOT EXISTS metrics (id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, type VARCHAR(255), name VARCHAR(255) NOT NULL, value DOUBLE PRECISION NOT NULL DEFAULT 0)")
 
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.ExecContext(s.ctx, "CREATE INDEX IF NOT EXISTS metrics_type_name ON metrics (type, name)")
+	_, err = s.db.ExecContext(s.ctx, "CREATE UNIQUE INDEX IF NOT EXISTS metrics_type_name ON metrics (type, name)")
 
 	return err
 }
 
 func (s *DatabaseStorage) UpdateGauge(metric string, value float64) {
-	s.update(metrics.TypeGauge, metric, value)
+	s.update(s.db, metrics.TypeGauge, metric, value)
 }
 
 func (s *DatabaseStorage) UpdateCounter(metric string, value float64) {
-	s.update(metrics.TypeCounter, metric, value)
+	s.update(s.db, metrics.TypeCounter, metric, value)
 }
 
-func (s *DatabaseStorage) update(metricType metrics.MetricType, metric string, value float64) {
-	var err error
-	if s.metricExist(metricType, metric) {
-		if metricType == metrics.TypeGauge {
-			_, err = s.db.ExecContext(s.ctx, "UPDATE metrics SET value = $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+func (s *DatabaseStorage) Updates(values []metrics.Metrics) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	for _, metric := range values {
+		if metric.MType == string(metrics.TypeGauge) {
+			s.update(tx, metrics.TypeGauge, metric.ID, *metric.Value)
+		} else if metric.MType == string(metrics.TypeCounter) {
+			s.update(tx, metrics.TypeCounter, metric.ID, float64(*metric.Delta))
 		} else {
-			_, err = s.db.ExecContext(s.ctx, "UPDATE metrics SET value = value + $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+			return fmt.Errorf("неизвестный тип метрики %v", metric.MType)
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (s *DatabaseStorage) update(q Query, metricType metrics.MetricType, metric string, value float64) {
+	var err error
+
+	if s.metricExist(q, metricType, metric) {
+		if metricType == metrics.TypeGauge {
+			_, err = q.ExecContext(s.ctx, "UPDATE metrics SET value = $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+		} else {
+			_, err = q.ExecContext(s.ctx, "UPDATE metrics SET value = value + $1 WHERE type = $2 AND name = $3", value, metricType, metric)
 		}
 	} else {
-		_, err = s.db.ExecContext(s.ctx, "INSERT INTO metrics (type, name, value) VALUES ($1, $2, $3)", metricType, metric, value)
+		_, err = q.ExecContext(s.ctx, "INSERT INTO metrics (type, name, value) VALUES ($1, $2, $3)", metricType, metric, value)
 	}
 
 	if err != nil {
@@ -124,8 +150,8 @@ func (s *DatabaseStorage) StoreAndClose() error {
 	return nil
 }
 
-func (s *DatabaseStorage) metricExist(metricType metrics.MetricType, metric string) bool {
-	row := s.db.QueryRowContext(s.ctx, "SELECT 1 FROM metrics WHERE type = $1 AND name = $2", metricType, metric)
+func (s *DatabaseStorage) metricExist(q Query, metricType metrics.MetricType, metric string) bool {
+	row := q.QueryRowContext(s.ctx, "SELECT 1 FROM metrics WHERE type = $1 AND name = $2", metricType, metric)
 
 	var exists int
 	err := row.Scan(&exists)
