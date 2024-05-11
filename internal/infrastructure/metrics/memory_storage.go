@@ -11,18 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type Storage interface {
-	UpdateGauge(metric string, value float64)
-	UpdateCounter(metric string, value float64)
-	GetGauges() map[string]float64
-	GetCounters() map[string]float64
-	Get(metricType metrics.MetricType, metric string) (float64, bool)
-	Store() error
-	Restore() error
-	Close() error
-	StoreAndClose() error
-}
-
 type StorageData struct {
 	Gauges   map[string]float64 `json:"gauges"`
 	Counters map[string]float64 `json:"counters"`
@@ -78,7 +66,7 @@ func (s *MemStorage) GetCounters() map[string]float64 {
 	return result
 }
 
-func (s *MemStorage) Get(metricType metrics.MetricType, metric string) (float64, bool) {
+func (s *MemStorage) GetValue(metricType metrics.MetricType, metric string) (float64, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

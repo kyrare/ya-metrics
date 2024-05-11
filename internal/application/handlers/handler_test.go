@@ -37,7 +37,7 @@ func TestHandler_Home(t *testing.T) {
 		want    want
 	}{
 		{
-			name:    "Get metric",
+			name:    "GetValue metric",
 			request: "",
 			method:  "GET",
 			want: want{

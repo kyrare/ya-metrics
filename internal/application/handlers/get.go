@@ -17,7 +17,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value, ok := h.storage.Get(metricType, metric)
+	value, ok := h.storage.GetValue(metricType, metric)
 
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)

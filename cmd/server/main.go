@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -14,6 +16,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	config, err := server.LoadConfig()
 
 	if err != nil {
@@ -29,23 +33,23 @@ func main() {
 	// делаем регистратор SugaredLogger
 	sugar := *logger.Sugar()
 
-	storage, err := metrics.NewMemStorage(config.FileStoragePath, sugar)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		err := storage.StoreAndClose()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
 	db, err := connection.New(config.DatabaseDsn, sugar)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() {
 		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	storage, err := createStorage(ctx, config, db, sugar)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err := storage.StoreAndClose()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,5 +83,13 @@ func createLogger(c server.Config) (*zap.Logger, error) {
 		return zap.NewProduction()
 	default:
 		return nil, fmt.Errorf("неизвестный APP_ENV %s", c.AppEnv)
+	}
+}
+
+func createStorage(ctx context.Context, c server.Config, db *sql.DB, logger zap.SugaredLogger) (metrics.Storage, error) {
+	if c.DatabaseDsn == "" {
+		return metrics.NewMemStorage(c.FileStoragePath, logger)
+	} else {
+		return metrics.NewDatabaseStorage(ctx, db, logger)
 	}
 }
