@@ -3,6 +3,7 @@ package metrics
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -152,7 +153,7 @@ func (s *MemStorage) Restore() error {
 	b, err := reader.ReadBytes('\n')
 
 	// если файл просто пустой, то это нормально, просто нет данных для восстановления
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		s.logger.Infoln("Empty file for restore")
 		return nil
 	} else if err != nil {

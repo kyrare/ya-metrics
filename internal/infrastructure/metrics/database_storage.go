@@ -3,8 +3,12 @@ package metrics
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"time"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"go.uber.org/zap"
 )
@@ -64,12 +68,21 @@ func (s *DatabaseStorage) update(q Query, metricType metrics.MetricType, metric 
 
 	if s.metricExist(q, metricType, metric) {
 		if metricType == metrics.TypeGauge {
-			_, err = q.ExecContext(s.ctx, "UPDATE metrics SET value = $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+			err = runRetriable(func() error {
+				_, err := q.ExecContext(s.ctx, "UPDATE metrics SET value = $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+				return err
+			})
 		} else {
-			_, err = q.ExecContext(s.ctx, "UPDATE metrics SET value = value + $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+			err = runRetriable(func() error {
+				_, err := q.ExecContext(s.ctx, "UPDATE metrics SET value = value + $1 WHERE type = $2 AND name = $3", value, metricType, metric)
+				return err
+			})
 		}
 	} else {
-		_, err = q.ExecContext(s.ctx, "INSERT INTO metrics (type, name, value) VALUES ($1, $2, $3)", metricType, metric, value)
+		err = runRetriable(func() error {
+			_, err := q.ExecContext(s.ctx, "INSERT INTO metrics (type, name, value) VALUES ($1, $2, $3)", metricType, metric, value)
+			return err
+		})
 	}
 
 	if err != nil {
@@ -127,7 +140,7 @@ func (s *DatabaseStorage) GetValue(metricType metrics.MetricType, metric string)
 	row := s.db.QueryRowContext(s.ctx, "SELECT value FROM metrics WHERE type = $1 AND name = $2", metricType, metric)
 	err := row.Scan(&value)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, false
 	}
 
@@ -159,6 +172,28 @@ func (s *DatabaseStorage) metricExist(q Query, metricType metrics.MetricType, me
 	s.logger.Infof("Check exist %v %v, error - %v, exists - %v, result - %v", metricType, metric, err, exists, err != sql.ErrNoRows && exists == 1)
 
 	return err != sql.ErrNoRows && exists == 1
+}
+
+func runRetriable(callback func() error) error {
+	var err error
+
+	sleeps := [3]time.Duration{time.Second, time.Second * 3, time.Second * 5}
+
+	for _, sleep := range sleeps {
+		err = callback()
+		if err == nil {
+			break
+		}
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code) {
+			time.Sleep(sleep)
+		} else {
+			return err
+		}
+	}
+
+	return err
 }
 
 func NewDatabaseStorage(ctx context.Context, DB *sql.DB, logger zap.SugaredLogger) (*DatabaseStorage, error) {
