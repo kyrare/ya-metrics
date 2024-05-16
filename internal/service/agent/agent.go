@@ -49,15 +49,25 @@ func (a *Agent) saveRuntimes() {
 }
 
 func (a *Agent) sendStorage() error {
-	for metric, value := range a.Storage.All() {
-		err := a.Client.Send(metrics.TypeGauge, metric, value)
+	var data []metrics.Metrics
 
+	for metric, value := range a.Storage.All() {
+		m, err := metrics.NewMetrics(metrics.TypeGauge, metric, value)
 		if err != nil {
 			return err
 		}
+
+		data = append(data, *m)
 	}
 
-	return a.Client.Send(metrics.TypeCounter, "PollCount", float64(a.Storage.GetCounter()))
+	m, err := metrics.NewMetrics(metrics.TypeCounter, "PollCount", float64(a.Storage.GetCounter()))
+	if err != nil {
+		return err
+	}
+
+	data = append(data, *m)
+
+	return a.Client.Send(data)
 }
 
 func NewAgent(config Config, storage agent.Storage, client client.Client, logger zap.SugaredLogger) *Agent {

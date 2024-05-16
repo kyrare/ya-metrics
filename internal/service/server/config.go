@@ -14,6 +14,7 @@ type Config struct {
 	FileStoragePath string
 	Restore         bool
 	AppEnv          string
+	DatabaseDsn     string
 }
 
 func LoadConfig() (Config, error) {
@@ -22,6 +23,7 @@ func LoadConfig() (Config, error) {
 	fileStoragePath := utils.GetParameter("f", "FILE_STORAGE_PATH", "/tmp/metrics-db.json", "Полное имя файла, куда сохраняются текущие значения (по умолчанию /tmp/metrics-db.json, пустое значение отключает функцию записи на диск)")
 	restore := utils.GetParameter("r", "RESTORE", "true", "Булево значение (true/false), определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера (по умолчанию true)")
 	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
+	databaseDsn := utils.GetParameter("d", "DATABASE_DSN", "", "Строка с адресом подключения к БД")
 
 	storeInterval, err := strconv.Atoi(*storeIntervalStr)
 	if err != nil {
@@ -36,5 +38,6 @@ func LoadConfig() (Config, error) {
 		FileStoragePath: *fileStoragePath,
 		Restore:         *restore == "true",
 		AppEnv:          *appEnv,
+		DatabaseDsn:     *databaseDsn,
 	}, nil
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,21 +13,23 @@ import (
 type Handler struct {
 	storage           metrics.Storage
 	storeStorageOnHit bool
+	DB                *sql.DB
 	logger            zap.SugaredLogger
 }
 
-func NewHandler(storage metrics.Storage, storeDataOnHit bool, logger zap.SugaredLogger) *Handler {
+func NewHandler(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, logger zap.SugaredLogger) *Handler {
 	return &Handler{
 		storage:           storage,
 		storeStorageOnHit: storeDataOnHit,
+		DB:                DB,
 		logger:            logger,
 	}
 }
 
-func ServerRouter(storage metrics.Storage, storeDataOnHit bool, logger zap.SugaredLogger) chi.Router {
+func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, logger zap.SugaredLogger) chi.Router {
 	r := chi.NewRouter()
 
-	h := NewHandler(storage, storeDataOnHit, logger)
+	h := NewHandler(storage, DB, storeDataOnHit, logger)
 
 	r.Use(func(handler http.Handler) http.Handler {
 		return middlewares.WithLogging(handler, logger)
@@ -35,10 +38,13 @@ func ServerRouter(storage metrics.Storage, storeDataOnHit bool, logger zap.Sugar
 	r.Use(middlewares.Decompress)
 
 	r.Get("/", h.Home)
+	r.Get("/ping", h.Ping)
 	r.Get("/value/{metricType}/{metric}", h.Get)
 	r.Post("/update/{metricType}/{metric}/{value}", h.Update)
 
 	r.Post("/value/", h.GetJSON)
 	r.Post("/update/", h.UpdateJSON)
+
+	r.Post("/updates/", h.UpdatesJSON)
 	return r
 }

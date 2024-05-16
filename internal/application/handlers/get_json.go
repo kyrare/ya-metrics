@@ -22,7 +22,7 @@ func (h *Handler) GetJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value, ok := h.storage.Get(metricType, request.ID)
+	value, ok := h.storage.GetValue(metricType, request.ID)
 
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)

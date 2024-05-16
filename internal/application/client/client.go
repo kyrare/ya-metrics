@@ -16,22 +16,15 @@ type Client struct {
 	Logger     zap.SugaredLogger
 }
 
-func (c *Client) Send(metricType metrics.MetricType, metric string, value float64) error {
-	bodyData, err := metrics.NewMetrics(metricType, metric, value)
+func (c *Client) Send(data []metrics.Metrics) error {
+	bodyJSON, err := json.Marshal(data)
 
 	if err != nil {
-		c.Logger.Error(err)
+		c.Logger.Error("Не удалось сконвертировать body в json", data)
 		return err
 	}
 
-	bodyJSON, err := json.Marshal(bodyData)
-
-	if err != nil {
-		c.Logger.Error("Не удалось сконвертировать body в json", bodyData)
-		return err
-	}
-
-	uri := "http://" + c.serverAddr + "/update/"
+	uri := "http://" + c.serverAddr + "/updates/"
 
 	c.Logger.Infoln(
 		"Начало выполнение запроса",

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kyrare/ya-metrics/internal/infrastructure/connection"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,10 @@ func TestHandler_Home(t *testing.T) {
 	storage, err := metrics.NewMemStorage("", sugar)
 	assert.NoError(t, err, "Не удалось создать storage")
 
-	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
+	db, err := connection.New("", sugar)
+	assert.NoError(t, err, "Не удалось создать соединение с БД")
+
+	ts := httptest.NewServer(ServerRouter(storage, db, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -33,7 +37,7 @@ func TestHandler_Home(t *testing.T) {
 		want    want
 	}{
 		{
-			name:    "Get metric",
+			name:    "GetValue metric",
 			request: "",
 			method:  "GET",
 			want: want{
@@ -64,7 +68,10 @@ func TestHandler_Get(t *testing.T) {
 	storage, err := metrics.NewMemStorage("", sugar)
 	assert.NoError(t, err, "Не удалось создать storage")
 
-	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
+	db, err := connection.New("", sugar)
+	assert.NoError(t, err, "Не удалось создать соединение с БД")
+
+	ts := httptest.NewServer(ServerRouter(storage, db, false, sugar))
 	defer ts.Close()
 
 	type want struct {
@@ -123,7 +130,10 @@ func TestHandler_Update(t *testing.T) {
 	storage, err := metrics.NewMemStorage("", sugar)
 	assert.NoError(t, err, "Не удалось создать storage")
 
-	ts := httptest.NewServer(ServerRouter(storage, false, sugar))
+	db, err := connection.New("", sugar)
+	assert.NoError(t, err, "Не удалось создать соединение с БД")
+
+	ts := httptest.NewServer(ServerRouter(storage, db, false, sugar))
 	defer ts.Close()
 
 	type want struct {

@@ -3,6 +3,8 @@ package metrics
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -10,18 +12,6 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"go.uber.org/zap"
 )
-
-type Storage interface {
-	UpdateGauge(metric string, value float64)
-	UpdateCounter(metric string, value float64)
-	GetGauges() map[string]float64
-	GetCounters() map[string]float64
-	Get(metricType metrics.MetricType, metric string) (float64, bool)
-	Store() error
-	Restore() error
-	Close() error
-	StoreAndClose() error
-}
 
 type StorageData struct {
 	Gauges   map[string]float64 `json:"gauges"`
@@ -54,6 +44,20 @@ func (s *MemStorage) UpdateCounter(metric string, value float64) {
 	s.Counters[metric] += value
 }
 
+func (s *MemStorage) Updates(values []metrics.Metrics) error {
+	for _, metric := range values {
+		if metric.MType == string(metrics.TypeGauge) {
+			s.UpdateGauge(metric.ID, *metric.Value)
+		} else if metric.MType == string(metrics.TypeCounter) {
+			s.UpdateCounter(metric.ID, float64(*metric.Delta))
+		} else {
+			return fmt.Errorf("неизвестный тип метрики %v", metric.MType)
+		}
+	}
+
+	return nil
+}
+
 func (s *MemStorage) GetGauges() map[string]float64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -78,7 +82,7 @@ func (s *MemStorage) GetCounters() map[string]float64 {
 	return result
 }
 
-func (s *MemStorage) Get(metricType metrics.MetricType, metric string) (float64, bool) {
+func (s *MemStorage) GetValue(metricType metrics.MetricType, metric string) (float64, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -149,7 +153,7 @@ func (s *MemStorage) Restore() error {
 	b, err := reader.ReadBytes('\n')
 
 	// если файл просто пустой, то это нормально, просто нет данных для восстановления
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		s.logger.Infoln("Empty file for restore")
 		return nil
 	} else if err != nil {

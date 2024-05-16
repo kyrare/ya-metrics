@@ -38,7 +38,7 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 		h.storage.UpdateCounter(request.ID, float64(*request.Delta))
 	}
 
-	value, _ := h.storage.Get(metricType, request.ID)
+	value, _ := h.storage.GetValue(metricType, request.ID)
 
 	responseData, err := metrics.NewMetrics(metricType, request.ID, value)
 
