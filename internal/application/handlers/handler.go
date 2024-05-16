@@ -13,23 +13,25 @@ import (
 type Handler struct {
 	storage           metrics.Storage
 	storeStorageOnHit bool
+	checkKey          bool
 	DB                *sql.DB
 	logger            zap.SugaredLogger
 }
 
-func NewHandler(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, logger zap.SugaredLogger) *Handler {
+func NewHandler(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, logger zap.SugaredLogger) *Handler {
 	return &Handler{
 		storage:           storage,
 		storeStorageOnHit: storeDataOnHit,
+		checkKey:          checkKey,
 		DB:                DB,
 		logger:            logger,
 	}
 }
 
-func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, logger zap.SugaredLogger) chi.Router {
+func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, logger zap.SugaredLogger) chi.Router {
 	r := chi.NewRouter()
 
-	h := NewHandler(storage, DB, storeDataOnHit, logger)
+	h := NewHandler(storage, DB, storeDataOnHit, checkKey, logger)
 
 	r.Use(func(handler http.Handler) http.Handler {
 		return middlewares.WithLogging(handler, logger)
