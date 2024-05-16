@@ -7,12 +7,14 @@ import (
 	"net/http"
 
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/compress"
 	"go.uber.org/zap"
 )
 
 type Client struct {
 	serverAddr string
+	addKey     bool
 	Logger     zap.SugaredLogger
 }
 
@@ -33,14 +35,14 @@ func (c *Client) Send(data []metrics.Metrics) error {
 		"method", "POST",
 	)
 
-	bodyJSON, err = compress.Compress(bodyJSON)
+	bodyJSONCompress, err := compress.Compress(bodyJSON)
 
 	if err != nil {
 		c.Logger.Error("Произошла ошибка сжатия данных", err)
 		return err
 	}
 
-	body := bytes.NewBuffer(bodyJSON)
+	body := bytes.NewBuffer(bodyJSONCompress)
 
 	req, err := http.NewRequest("POST", uri, body)
 
@@ -51,6 +53,9 @@ func (c *Client) Send(data []metrics.Metrics) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Encoding", "gzip")
+	if c.addKey {
+		req.Header.Set("HashSHA256", utils.Hash(bodyJSON))
+	}
 
 	response, err := http.DefaultClient.Do(req)
 
@@ -81,6 +86,6 @@ func bodySize(body io.ReadCloser) int {
 	return len(bytes)
 }
 
-func NewClient(serverAddr string, logger zap.SugaredLogger) *Client {
-	return &Client{serverAddr: serverAddr, Logger: logger}
+func NewClient(serverAddr string, addKey bool, logger zap.SugaredLogger) *Client {
+	return &Client{serverAddr: serverAddr, addKey: addKey, Logger: logger}
 }

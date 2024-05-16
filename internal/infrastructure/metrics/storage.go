@@ -1,16 +1,30 @@
 package metrics
 
-import "github.com/kyrare/ya-metrics/internal/domain/metrics"
+import (
+	"github.com/kyrare/ya-metrics/internal/domain/metrics"
+)
 
-type Storage interface {
+type storageGauge interface {
 	UpdateGauge(metric string, value float64)
-	UpdateCounter(metric string, value float64)
 	GetGauges() map[string]float64
+}
+
+type storageCounter interface {
+	UpdateCounter(metric string, value float64)
 	GetCounters() map[string]float64
-	GetValue(metricType metrics.MetricType, metric string) (float64, bool)
+}
+
+type storageStored interface {
 	Store() error
 	Restore() error
-	Close() error
 	StoreAndClose() error
+}
+
+type Storage interface {
+	storageGauge
+	storageCounter
+	storageStored
+	GetValue(metricType metrics.MetricType, metric string) (float64, bool)
 	Updates(values []metrics.Metrics) error
+	Close() error
 }
