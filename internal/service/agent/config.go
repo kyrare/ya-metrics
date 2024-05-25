@@ -14,6 +14,7 @@ type Config struct {
 	PollInterval   time.Duration
 	AppEnv         string
 	AddKey         bool
+	RateLimit      uint64
 }
 
 func LoadConfig() (Config, error) {
@@ -22,6 +23,7 @@ func LoadConfig() (Config, error) {
 	pollIntervalStr := utils.GetParameter("p", "POLL_INTERVAL", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
 	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
 	key := utils.GetParameter("k", "KEY", "", "Добавлять заголовок с хешом")
+	rateLimitStr := utils.GetParameter("l", "RATE_LIMIT", "1", "Количество одновременно исходящих запросов на сервер")
 
 	flag.Parse()
 
@@ -35,11 +37,17 @@ func LoadConfig() (Config, error) {
 		return Config{}, err
 	}
 
+	rateLimit, err := strconv.ParseInt(*rateLimitStr, 10, strconv.IntSize)
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		Address:        *addr,
 		ReportInterval: time.Duration(reportInterval),
 		PollInterval:   time.Duration(pollInterval),
 		AppEnv:         *appEnv,
 		AddKey:         *key != "",
+		RateLimit:      uint64(rateLimit),
 	}, nil
 }
