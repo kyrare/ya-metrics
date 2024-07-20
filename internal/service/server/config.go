@@ -15,6 +15,7 @@ type Config struct {
 	Restore         bool
 	AppEnv          string
 	DatabaseDsn     string
+	CheckKey        bool
 }
 
 func LoadConfig() (Config, error) {
@@ -24,6 +25,7 @@ func LoadConfig() (Config, error) {
 	restore := utils.GetParameter("r", "RESTORE", "true", "Булево значение (true/false), определяющее, загружать или нет ранее сохранённые значения из указанного файла при старте сервера (по умолчанию true)")
 	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
 	databaseDsn := utils.GetParameter("d", "DATABASE_DSN", "", "Строка с адресом подключения к БД")
+	key := utils.GetParameter("k", "KEY", "", "Проверять заголовок с хешом")
 
 	storeInterval, err := strconv.Atoi(*storeIntervalStr)
 	if err != nil {
@@ -39,5 +41,6 @@ func LoadConfig() (Config, error) {
 		Restore:         *restore == "true",
 		AppEnv:          *appEnv,
 		DatabaseDsn:     *databaseDsn,
+		CheckKey:        *key != "",
 	}, nil
 }

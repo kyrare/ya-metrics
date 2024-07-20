@@ -28,7 +28,7 @@ func (s *Server) Run() error {
 
 	s.storageStore()
 
-	r := handlers.ServerRouter(s.Storage, s.DB, s.Config.StoreInterval == 0, s.Logger)
+	r := handlers.ServerRouter(s.Storage, s.DB, s.Config.StoreInterval == 0, s.Config.CheckKey, s.Logger)
 
 	return http.ListenAndServe(s.Config.Address, r)
 }

@@ -8,6 +8,11 @@ import (
 )
 
 func (h *Handler) UpdatesJSON(w http.ResponseWriter, r *http.Request) {
+	if !h.checkRequestKey(r) {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
 	var request []metrics.Metrics
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
