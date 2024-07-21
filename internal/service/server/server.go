@@ -1,3 +1,5 @@
+// Пакет server поднимает api для получения метрики и их хранения
+
 package server
 
 import (

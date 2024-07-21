@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// Ping эндпоинт для проверки работы сайта
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	err := h.DB.Ping()
 

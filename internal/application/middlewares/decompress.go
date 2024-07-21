@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -24,10 +23,9 @@ func (c *compressReader) Close() error {
 	return c.zr.Close()
 }
 
+// Decompress мидлвара для разархивации запроса из форамата gzip
 func Decompress(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.Header.Get("Content-Encoding"))
-
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
 			h.ServeHTTP(w, r)
 			return

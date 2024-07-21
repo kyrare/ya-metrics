@@ -1,3 +1,4 @@
+// Package client для отправки данных из агента на сервер
 package client
 
 import (
@@ -19,6 +20,26 @@ type Client struct {
 	Logger     zap.SugaredLogger
 }
 
+// NewClient конструктор для клиента
+func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.SugaredLogger) *Client {
+	jobs := make(chan []metrics.Metrics, workersCount)
+
+	c := &Client{
+		serverAddr: serverAddr,
+		addKey:     addKey,
+		jobs:       jobs,
+		Logger:     logger,
+	}
+
+	var i uint64
+	for i = 0; i < workersCount; i++ {
+		go c.newWorker(jobs)
+	}
+
+	return c
+}
+
+// Send отправляет данные
 func (c *Client) Send(data []metrics.Metrics) {
 	c.jobs <- data
 }
@@ -100,22 +121,4 @@ func bodySize(body io.ReadCloser) int {
 	}
 
 	return len(bytes)
-}
-
-func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.SugaredLogger) *Client {
-	jobs := make(chan []metrics.Metrics, workersCount)
-
-	c := &Client{
-		serverAddr: serverAddr,
-		addKey:     addKey,
-		jobs:       jobs,
-		Logger:     logger,
-	}
-
-	var i uint64
-	for i = 0; i < workersCount; i++ {
-		go c.newWorker(jobs)
-	}
-
-	return c
 }

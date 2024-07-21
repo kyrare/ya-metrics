@@ -16,6 +16,12 @@ type MemStorage struct {
 	mu      sync.RWMutex
 }
 
+func NewMemeStorage() *MemStorage {
+	return &MemStorage{
+		values: make(map[string]float64),
+	}
+}
+
 func (m *MemStorage) Set(metric string, value float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -52,10 +58,4 @@ func (m *MemStorage) All() map[string]float64 {
 	}
 
 	return result
-}
-
-func NewMemeStorage() *MemStorage {
-	return &MemStorage{
-		values: make(map[string]float64),
-	}
 }

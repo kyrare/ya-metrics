@@ -7,6 +7,7 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
+// GetJSON получение значение метрики в формате JSON
 func (h *Handler) GetJSON(w http.ResponseWriter, r *http.Request) {
 	var request metrics.Metrics
 

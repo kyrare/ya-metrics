@@ -1,3 +1,4 @@
+// Package handlers обрабатывает запросы сервера
 package handlers
 
 import (
@@ -5,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kyrare/ya-metrics/internal/application/middlewares"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"go.uber.org/zap"
@@ -38,6 +40,7 @@ func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, chec
 	})
 	r.Use(middlewares.Compress)
 	r.Use(middlewares.Decompress)
+	r.Mount("/debug", middleware.Profiler())
 
 	r.Get("/", h.Home)
 	r.Get("/ping", h.Ping)

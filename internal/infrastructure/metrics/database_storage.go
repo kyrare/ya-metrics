@@ -24,6 +24,20 @@ type Query interface {
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
+func NewDatabaseStorage(ctx context.Context, DB *sql.DB, logger zap.SugaredLogger) (*DatabaseStorage, error) {
+	s := &DatabaseStorage{
+		ctx:    ctx,
+		db:     DB,
+		logger: logger,
+	}
+
+	if err := s.init(); err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
 func (s *DatabaseStorage) init() error {
 	_, err := s.db.ExecContext(s.ctx, "CREATE TABLE IF NOT EXISTS metrics (id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, type VARCHAR(255), name VARCHAR(255) NOT NULL, value DOUBLE PRECISION NOT NULL DEFAULT 0)")
 
@@ -194,18 +208,4 @@ func runRetriable(callback func() error) error {
 	}
 
 	return err
-}
-
-func NewDatabaseStorage(ctx context.Context, DB *sql.DB, logger zap.SugaredLogger) (*DatabaseStorage, error) {
-	s := &DatabaseStorage{
-		ctx:    ctx,
-		db:     DB,
-		logger: logger,
-	}
-
-	if err := s.init(); err != nil {
-		return nil, err
-	}
-
-	return s, nil
 }

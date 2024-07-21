@@ -27,6 +27,21 @@ type MemStorage struct {
 	logger   zap.SugaredLogger
 }
 
+func NewMemStorage(filePath string, logger zap.SugaredLogger) (*MemStorage, error) {
+	file, err := openFile(filePath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &MemStorage{
+		Gauges:   make(map[string]float64),
+		Counters: make(map[string]float64),
+		file:     file,
+		logger:   logger,
+	}, nil
+}
+
 func (s *MemStorage) UpdateGauge(metric string, value float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -197,21 +212,6 @@ func (s *MemStorage) StoreAndClose() error {
 		return err
 	}
 	return s.Close()
-}
-
-func NewMemStorage(filePath string, logger zap.SugaredLogger) (*MemStorage, error) {
-	file, err := openFile(filePath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &MemStorage{
-		Gauges:   make(map[string]float64),
-		Counters: make(map[string]float64),
-		file:     file,
-		logger:   logger,
-	}, nil
 }
 
 func openFile(filePath string) (*os.File, error) {

@@ -18,6 +18,7 @@ type Config struct {
 	CheckKey        bool
 }
 
+// LoadConfig загружает конфиг для сервера
 func LoadConfig() (Config, error) {
 	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
 	storeIntervalStr := utils.GetParameter("i", "STORE_INTERVAL", "300", "Интервал времени в секундах, по истечении которого текущие показания сервера сохраняются на диск (по умолчанию 300 секунд, значение 0 делает запись синхронной)")

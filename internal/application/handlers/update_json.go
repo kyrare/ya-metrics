@@ -7,6 +7,7 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
+// UpdateJSON обновление метрики в формате JSON
 func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 	var request metrics.Metrics
 

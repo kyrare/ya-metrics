@@ -1,3 +1,5 @@
+// Пакет agent для сбора метрик машины и отправки собранных метрик на сервер
+
 package agent
 
 import (
@@ -18,6 +20,17 @@ type Agent struct {
 	Logger  zap.SugaredLogger
 }
 
+// NewAgent Конструктор для агента
+func NewAgent(config Config, storage agent.Storage, client client.Client, logger zap.SugaredLogger) *Agent {
+	return &Agent{
+		Config:  config,
+		Storage: storage,
+		Client:  client,
+		Logger:  logger,
+	}
+}
+
+// Run Запускает агента
 func (a *Agent) Run() {
 	var wg sync.WaitGroup
 
@@ -103,13 +116,4 @@ func (a *Agent) sendStorage() error {
 	a.Client.Send(data)
 
 	return nil
-}
-
-func NewAgent(config Config, storage agent.Storage, client client.Client, logger zap.SugaredLogger) *Agent {
-	return &Agent{
-		Config:  config,
-		Storage: storage,
-		Client:  client,
-		Logger:  logger,
-	}
 }

@@ -16,6 +16,7 @@ func (c compressWriter) Write(b []byte) (int, error) {
 	return c.Writer.Write(b)
 }
 
+// Compress мидлвара для сжатия ответа в форамате gzip
 func Compress(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
