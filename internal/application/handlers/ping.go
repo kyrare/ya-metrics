@@ -9,10 +9,10 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	err := h.DB.Ping()
 
 	if err == nil {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	h.logger.Error("500 status ", err)
-	w.WriteHeader(500)
+	w.WriteHeader(http.StatusInternalServerError)
 }

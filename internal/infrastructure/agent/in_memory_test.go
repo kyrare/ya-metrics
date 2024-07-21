@@ -44,7 +44,7 @@ func TestMemStorage_set(t *testing.T) {
 	}
 }
 
-func TestMemStorage_increment(t *testing.T) {
+func TestMemStorage_IncrementCounter(t *testing.T) {
 	type fields struct {
 		counter int
 	}
@@ -52,28 +52,28 @@ func TestMemStorage_increment(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		actual int
+		want   int
 	}{
 		{
 			name: "Test 0 -> 1",
 			fields: fields{
 				counter: 0,
 			},
-			actual: 1,
+			want: 1,
 		},
 		{
 			name: "Test 1000 -> 1001",
 			fields: fields{
 				counter: 1000,
 			},
-			actual: 1001,
+			want: 1001,
 		},
 		{
 			name: "Test -1 -> 0",
 			fields: fields{
 				counter: -1,
 			},
-			actual: 0,
+			want: 0,
 		},
 	}
 
@@ -84,7 +84,69 @@ func TestMemStorage_increment(t *testing.T) {
 			}
 
 			m.IncrementCounter()
-			assert.Equal(t, m.counter, tt.actual)
+			assert.Equal(t, tt.want, m.GetCounter())
 		})
 	}
+}
+
+func TestMemStorage_GetCounter(t *testing.T) {
+	type fields struct {
+		counter int
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		want   int
+	}{
+		{
+			name: "Test 0",
+			fields: fields{
+				counter: 0,
+			},
+			want: 0,
+		},
+		{
+			name: "Test 1",
+			fields: fields{
+				counter: 1,
+			},
+			want: 1,
+		},
+		{
+			name: "Test 1000",
+			fields: fields{
+				counter: 1000,
+			},
+			want: 1000,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &MemStorage{
+				counter: tt.fields.counter,
+			}
+
+			assert.Equal(t, tt.want, m.GetCounter())
+		})
+	}
+}
+
+func TestMemStorage_ResetCounter(t *testing.T) {
+	t.Run("Reset counter", func(t *testing.T) {
+		m := &MemStorage{
+			counter: 0,
+		}
+
+		m.IncrementCounter()
+		m.IncrementCounter()
+		m.IncrementCounter()
+
+		assert.Equal(t, 3, m.GetCounter())
+
+		m.ResetCounter()
+
+		assert.Equal(t, 0, m.GetCounter())
+	})
 }
