@@ -135,11 +135,8 @@ func TestMemStorage_Updates(t *testing.T) {
 		values []metrics.Metrics
 	}
 
-	var value float64
-	value = 1.1
-
-	var delta int64
-	delta = 1
+	value := float64(1.1)
+	delta := int64(1)
 
 	tests := []struct {
 		name   string
