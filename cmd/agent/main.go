@@ -26,7 +26,7 @@ func main() {
 	// делаем регистратор SugaredLogger
 	sugar := *logger.Sugar()
 
-	s := agentStorage.NewMemeStorage()
+	s := agentStorage.NewMemStorage()
 	cl := client.NewClient(config.Address, config.AddKey, config.RateLimit, sugar)
 
 	service := agent.NewAgent(config, s, *cl, sugar)

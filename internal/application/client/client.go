@@ -31,8 +31,7 @@ func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.S
 		Logger:     logger,
 	}
 
-	var i uint64
-	for i = 0; i < workersCount; i++ {
+	for i := uint64(0); i < workersCount; i++ {
 		go c.newWorker(jobs)
 	}
 

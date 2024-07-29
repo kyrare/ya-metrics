@@ -16,7 +16,7 @@ type MemStorage struct {
 	mu      sync.RWMutex
 }
 
-func NewMemeStorage() *MemStorage {
+func NewMemStorage() *MemStorage {
 	return &MemStorage{
 		values: make(map[string]float64),
 	}
