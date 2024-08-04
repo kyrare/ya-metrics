@@ -5,6 +5,8 @@ import (
 
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestMemStorage_UpdateGauge(t *testing.T) {
@@ -264,6 +266,19 @@ func TestMemStorage_GetValue(t *testing.T) {
 			want:  0,
 			want1: false,
 		},
+		{
+			name: "Unknown metric type",
+			fields: fields{
+				Gauges:   map[string]float64{},
+				Counters: map[string]float64{},
+			},
+			args: args{
+				metricType: metrics.MetricType("test"),
+				metric:     "",
+			},
+			want:  0,
+			want1: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -279,4 +294,32 @@ func TestMemStorage_GetValue(t *testing.T) {
 			assert.Equalf(t, tt.want1, got1, "GetValue(%v, %v)", tt.args.metricType, tt.args.metric)
 		})
 	}
+}
+
+func TestMemStorage_StoreAndRestore(t *testing.T) {
+	t.Run("Check saved value in file and load from file", func(t *testing.T) {
+		file := "/tmp/metrics-test-db.json"
+
+		s, err := NewMemStorage(file, *zap.New(nil).Sugar())
+		require.NoError(t, err)
+
+		s.Gauges = map[string]float64{
+			"gauges_1": 1,
+			"gauges_2": 2.1,
+		}
+		s.Counters = map[string]float64{
+			"counters_1": 1.2,
+			"counters_2": 2.2,
+		}
+
+		err = s.StoreAndClose()
+		require.NoError(t, err)
+
+		s2, err := NewMemStorage(file, *zap.New(nil).Sugar())
+		require.NoError(t, err)
+		s2.Restore()
+
+		assert.Equal(t, s.Gauges, s2.Gauges)
+		assert.Equal(t, s.Counters, s2.Counters)
+	})
 }
