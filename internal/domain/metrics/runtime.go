@@ -2,6 +2,7 @@ package metrics
 
 import "runtime"
 
+// GetRuntimes получение runtime метрик
 func GetRuntimes() map[string]float64 {
 	var m runtime.MemStats
 

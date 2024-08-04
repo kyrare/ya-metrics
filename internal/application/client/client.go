@@ -1,3 +1,4 @@
+// Package client для отправки данных из агента на сервер
 package client
 
 import (
@@ -16,23 +17,40 @@ type Client struct {
 	serverAddr string
 	addKey     bool
 	jobs       chan []metrics.Metrics
-	results    chan error
 	Logger     zap.SugaredLogger
 }
 
-func (c *Client) Send(data []metrics.Metrics) {
-	c.jobs <- data
+// NewClient конструктор для клиента
+func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.SugaredLogger) *Client {
+	jobs := make(chan []metrics.Metrics, workersCount)
 
-	// тут я не понял, как можно вернуть результат именно для этого запроса
-	// по идее в results может быть много результатов и как понять, какой результат именно для текущего data не понятно
-	// просьба при ревью объяснить этот момент
+	c := &Client{
+		serverAddr: serverAddr,
+		addKey:     addKey,
+		jobs:       jobs,
+		Logger:     logger,
+	}
+
+	for i := uint64(0); i < workersCount; i++ {
+		go c.newWorker(jobs)
+	}
+
+	return c
 }
 
-func (c *Client) newWorker(jobs <-chan []metrics.Metrics, results chan<- error) {
+// Send отправляет данные
+func (c *Client) Send(data []metrics.Metrics) {
+	c.jobs <- data
+}
+
+func (c *Client) newWorker(jobs <-chan []metrics.Metrics) {
 	c.Logger.Infoln("Создан новый воркер")
 
 	for data := range jobs {
-		results <- c.send(data)
+		err := c.send(data)
+		if err != nil {
+			c.Logger.Error(err)
+		}
 	}
 }
 
@@ -102,24 +120,4 @@ func bodySize(body io.ReadCloser) int {
 	}
 
 	return len(bytes)
-}
-
-func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.SugaredLogger) *Client {
-	jobs := make(chan []metrics.Metrics, workersCount)
-	results := make(chan error, workersCount)
-
-	c := &Client{
-		serverAddr: serverAddr,
-		addKey:     addKey,
-		jobs:       jobs,
-		results:    results,
-		Logger:     logger,
-	}
-
-	var i uint64
-	for i = 0; i < workersCount; i++ {
-		go c.newWorker(jobs, results)
-	}
-
-	return c
 }

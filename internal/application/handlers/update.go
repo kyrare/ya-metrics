@@ -8,6 +8,7 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
+// Update обновление метрики
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	metricType := metrics.MetricType(chi.URLParam(r, "metricType"))
 

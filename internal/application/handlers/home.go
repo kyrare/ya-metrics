@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// Home получание главной страницы со списком всех метрик
 func (h *Handler) Home(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

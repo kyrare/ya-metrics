@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// WithLogging мидлвара для логирования запросов
 func WithLogging(h http.Handler, logger zap.SugaredLogger) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		// функция Now() возвращает текущее время

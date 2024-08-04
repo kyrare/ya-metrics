@@ -17,6 +17,7 @@ type Config struct {
 	RateLimit      uint64
 }
 
+// LoadConfig загружает конфиг для агента
 func LoadConfig() (Config, error) {
 	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
 	reportIntervalStr := utils.GetParameter("r", "REPORT_INTERVAL", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")

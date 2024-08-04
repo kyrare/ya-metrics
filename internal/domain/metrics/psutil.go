@@ -5,6 +5,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// GetPstil получение pstil метрик
 func GetPstil() map[string]float64 {
 	v, _ := mem.VirtualMemory()
 	c, _ := cpu.Percent(0, false)

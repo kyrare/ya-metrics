@@ -8,6 +8,7 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 )
 
+// Get получение значение метрики
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	metricType := metrics.MetricType(chi.URLParam(r, "metricType"))
 	metric := chi.URLParam(r, "metric")
