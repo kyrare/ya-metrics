@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
@@ -298,7 +300,10 @@ func TestMemStorage_GetValue(t *testing.T) {
 
 func TestMemStorage_StoreAndRestore(t *testing.T) {
 	t.Run("Check saved value in file and load from file", func(t *testing.T) {
-		file := "/tmp/metrics-test-db.json"
+		file := filepath.Join(t.TempDir(), "metrics-test-db.json")
+		t.Cleanup(func() {
+			os.RemoveAll(file)
+		})
 
 		s, err := NewMemStorage(file, *zap.New(nil).Sugar())
 		require.NoError(t, err)
