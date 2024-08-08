@@ -5,12 +5,21 @@ import (
 	"log"
 
 	"github.com/kyrare/ya-metrics/internal/application/client"
+	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	agentStorage "github.com/kyrare/ya-metrics/internal/infrastructure/agent"
 	"github.com/kyrare/ya-metrics/internal/service/agent"
 	"go.uber.org/zap"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func main() {
+	utils.PrintBuildData(buildVersion, buildDate, buildCommit)
+
 	config, err := agent.LoadConfig()
 
 	if err != nil {
