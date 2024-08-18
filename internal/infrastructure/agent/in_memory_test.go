@@ -150,3 +150,18 @@ func TestMemStorage_ResetCounter(t *testing.T) {
 		assert.Equal(t, 0, m.GetCounter())
 	})
 }
+
+func TestMemStorage_All(t *testing.T) {
+	t.Run("Test All", func(t *testing.T) {
+		m := NewMemStorage()
+
+		values := map[string]float64{
+			"test": 2.2,
+			"foo":  1.1,
+		}
+
+		m.values = values
+
+		assert.Equal(t, values, m.All())
+	})
+}

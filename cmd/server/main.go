@@ -9,13 +9,22 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/connection"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"github.com/kyrare/ya-metrics/internal/service/server"
 	"go.uber.org/zap"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func main() {
+	utils.PrintBuildData(buildVersion, buildDate, buildCommit)
+
 	ctx := context.Background()
 
 	config, err := server.LoadConfig()
