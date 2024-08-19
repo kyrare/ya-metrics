@@ -1,7 +1,10 @@
 package agent
 
 import (
+	"encoding/json"
 	"flag"
+	"io"
+	"os"
 	"strconv"
 	"time"
 
@@ -18,15 +21,32 @@ type Config struct {
 	CryptoKey      string
 }
 
+type configFile struct {
+	Address        string `json:"address,omitempty"`
+	ReportInterval string `json:"store_interval,omitempty"`
+	PollInterval   string `json:"poll_interval,omitempty"`
+	Key            string `json:"key,omitempty"`
+	AppEnv         string `json:"app_env,omitempty"`
+	RateLimit      string `json:"rate_limit,omitempty"`
+	CryptoKey      string `json:"crypto_key,omitempty"`
+}
+
 // LoadConfig загружает конфиг для агента
 func LoadConfig() (Config, error) {
-	addr := utils.GetParameter("a", "ADDRESS", "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
-	reportIntervalStr := utils.GetParameter("r", "REPORT_INTERVAL", "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
-	pollIntervalStr := utils.GetParameter("p", "POLL_INTERVAL", "2", "Частота опроса метрик (по умолчанию 2 секунды)")
-	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
-	key := utils.GetParameter("k", "KEY", "", "Добавлять заголовок с хешом")
-	rateLimitStr := utils.GetParameter("l", "RATE_LIMIT", "1", "Количество одновременно исходящих запросов на сервер")
-	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", "", "Путь до файла с публичным ключом")
+	configFilePath := utils.GetParameter("c", "CONFIG", "", "", "Путь до файла с конфигурацией")
+
+	cf, err := loadConfigFile(*configFilePath)
+	if err != nil {
+		return Config{}, err
+	}
+
+	addr := utils.GetParameter("a", "ADDRESS", cf.Address, "0.0.0.0:8080", "Адрес сервера (по умолчанию 0.0.0.0:8080)")
+	reportIntervalStr := utils.GetParameter("r", "REPORT_INTERVAL", cf.ReportInterval, "10", "Частота отправки метрик на сервер (по умолчанию 10 секунд)")
+	pollIntervalStr := utils.GetParameter("p", "POLL_INTERVAL", cf.PollInterval, "2", "Частота опроса метрик (по умолчанию 2 секунды)")
+	appEnv := utils.GetParameter("env", "APP_ENV", cf.AppEnv, "development", "Режим работы, production|development (по умолчанию development)")
+	key := utils.GetParameter("k", "KEY", cf.Key, "", "Добавлять заголовок с хешом")
+	rateLimitStr := utils.GetParameter("l", "RATE_LIMIT", cf.RateLimit, "1", "Количество одновременно исходящих запросов на сервер")
+	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", cf.CryptoKey, "", "Путь до файла с публичным ключом")
 
 	flag.Parse()
 
@@ -54,4 +74,26 @@ func LoadConfig() (Config, error) {
 		RateLimit:      uint64(rateLimit),
 		CryptoKey:      *cryptoKey,
 	}, nil
+}
+
+func loadConfigFile(path string) (configFile, error) {
+	if path == "" {
+		return configFile{}, nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return configFile{}, err
+	}
+	defer file.Close()
+
+	data, _ := io.ReadAll(file)
+
+	var cf configFile
+	err = json.Unmarshal(data, &cf)
+	if err != nil {
+		return configFile{}, err
+	}
+
+	return cf, err
 }
