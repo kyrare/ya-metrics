@@ -36,7 +36,7 @@ func main() {
 	sugar := *logger.Sugar()
 
 	s := agentStorage.NewMemStorage()
-	cl := client.NewClient(config.Address, config.AddKey, config.RateLimit, sugar)
+	cl := client.NewClient(config.Address, config.AddKey, config.RateLimit, config.CryptoKey, sugar)
 
 	service := agent.NewAgent(config, s, *cl, sugar)
 

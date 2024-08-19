@@ -10,6 +10,7 @@ import (
 	"github.com/kyrare/ya-metrics/internal/domain/metrics"
 	"github.com/kyrare/ya-metrics/internal/domain/utils"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/compress"
+	"github.com/kyrare/ya-metrics/internal/infrastructure/encrypt"
 	"go.uber.org/zap"
 )
 
@@ -17,17 +18,19 @@ type Client struct {
 	serverAddr string
 	addKey     bool
 	jobs       chan []metrics.Metrics
+	cryptoKey  string
 	Logger     zap.SugaredLogger
 }
 
 // NewClient конструктор для клиента
-func NewClient(serverAddr string, addKey bool, workersCount uint64, logger zap.SugaredLogger) *Client {
+func NewClient(serverAddr string, addKey bool, workersCount uint64, cryptoKey string, logger zap.SugaredLogger) *Client {
 	jobs := make(chan []metrics.Metrics, workersCount)
 
 	c := &Client{
 		serverAddr: serverAddr,
 		addKey:     addKey,
 		jobs:       jobs,
+		cryptoKey:  cryptoKey,
 		Logger:     logger,
 	}
 
@@ -71,14 +74,22 @@ func (c *Client) send(data []metrics.Metrics) error {
 		"method", "POST",
 	)
 
-	bodyJSONCompress, err := compress.Compress(bodyJSON)
+	bodyData, err := compress.Compress(bodyJSON)
 
 	if err != nil {
 		c.Logger.Error("Произошла ошибка сжатия данных", err)
 		return err
 	}
 
-	body := bytes.NewBuffer(bodyJSONCompress)
+	if c.cryptoKey != "" {
+		bodyData, err = encrypt.Encrypt(bodyJSON, c.cryptoKey)
+		if err != nil {
+			c.Logger.Error("Произошла ошибка шифрования данных", err)
+			return err
+		}
+	}
+
+	body := bytes.NewBuffer(bodyData)
 
 	req, err := http.NewRequest("POST", uri, body)
 

@@ -15,6 +15,7 @@ type Config struct {
 	AppEnv         string
 	AddKey         bool
 	RateLimit      uint64
+	CryptoKey      string
 }
 
 // LoadConfig загружает конфиг для агента
@@ -25,6 +26,7 @@ func LoadConfig() (Config, error) {
 	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
 	key := utils.GetParameter("k", "KEY", "", "Добавлять заголовок с хешом")
 	rateLimitStr := utils.GetParameter("l", "RATE_LIMIT", "1", "Количество одновременно исходящих запросов на сервер")
+	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", "", "Путь до файла с публичным ключом")
 
 	flag.Parse()
 
@@ -50,5 +52,6 @@ func LoadConfig() (Config, error) {
 		AppEnv:         *appEnv,
 		AddKey:         *key != "",
 		RateLimit:      uint64(rateLimit),
+		CryptoKey:      *cryptoKey,
 	}, nil
 }

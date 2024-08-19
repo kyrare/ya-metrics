@@ -29,13 +29,16 @@ func NewHandler(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkK
 	}
 }
 
-func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, logger zap.SugaredLogger) chi.Router {
+func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, cryptoKey string, logger zap.SugaredLogger) chi.Router {
 	r := chi.NewRouter()
 
 	h := NewHandler(storage, DB, storeDataOnHit, checkKey, logger)
 
 	r.Use(func(handler http.Handler) http.Handler {
 		return middlewares.WithLogging(handler, logger)
+	})
+	r.Use(func(handler http.Handler) http.Handler {
+		return middlewares.Decrypt(handler, cryptoKey, logger)
 	})
 	r.Use(middlewares.Compress)
 	r.Use(middlewares.Decompress)

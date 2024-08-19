@@ -16,6 +16,7 @@ type Config struct {
 	AppEnv          string
 	DatabaseDsn     string
 	CheckKey        bool
+	CryptoKey       string
 }
 
 // LoadConfig загружает конфиг для сервера
@@ -27,6 +28,7 @@ func LoadConfig() (Config, error) {
 	appEnv := utils.GetParameter("env", "APP_ENV", "development", "Режим работы, production|development (по умолчанию development)")
 	databaseDsn := utils.GetParameter("d", "DATABASE_DSN", "", "Строка с адресом подключения к БД")
 	key := utils.GetParameter("k", "KEY", "", "Проверять заголовок с хешом")
+	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", "", "Путь до файла с приватным ключом")
 
 	storeInterval, err := strconv.Atoi(*storeIntervalStr)
 	if err != nil {
@@ -43,5 +45,6 @@ func LoadConfig() (Config, error) {
 		AppEnv:          *appEnv,
 		DatabaseDsn:     *databaseDsn,
 		CheckKey:        *key != "",
+		CryptoKey:       *cryptoKey,
 	}, nil
 }

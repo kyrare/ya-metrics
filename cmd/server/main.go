@@ -80,7 +80,7 @@ func main() {
 	err = service.Run()
 
 	if err != nil {
-		fmt.Println(err)
+		sugar.Fatal(err)
 	}
 }
 
