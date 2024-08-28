@@ -36,7 +36,10 @@ func main() {
 	sugar := *logger.Sugar()
 
 	s := agentStorage.NewMemStorage()
-	cl := client.NewClient(config.Address, config.AddKey, config.RateLimit, config.CryptoKey, sugar)
+	cl, err := client.NewClient(config.Address, config.AddKey, config.RateLimit, config.CryptoKey, sugar)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	service := agent.NewAgent(config, s, *cl, sugar)
 

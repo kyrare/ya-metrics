@@ -20,10 +20,17 @@ type Client struct {
 	jobs       chan []metrics.Metrics
 	cryptoKey  string
 	Logger     zap.SugaredLogger
+	hostIP     string
 }
 
 // NewClient конструктор для клиента
-func NewClient(serverAddr string, addKey bool, workersCount uint64, cryptoKey string, logger zap.SugaredLogger) *Client {
+func NewClient(serverAddr string, addKey bool, workersCount uint64, cryptoKey string, logger zap.SugaredLogger) (*Client, error) {
+	hostIP, err := utils.GetHostIPAddress()
+	if err != nil {
+		logger.Error("Не удалось определить ip адрес хоста", err.Error())
+		return nil, err
+	}
+
 	jobs := make(chan []metrics.Metrics, workersCount)
 
 	c := &Client{
@@ -32,13 +39,14 @@ func NewClient(serverAddr string, addKey bool, workersCount uint64, cryptoKey st
 		jobs:       jobs,
 		cryptoKey:  cryptoKey,
 		Logger:     logger,
+		hostIP:     hostIP,
 	}
 
 	for i := uint64(0); i < workersCount; i++ {
 		go c.newWorker(jobs)
 	}
 
-	return c
+	return c, nil
 }
 
 // Send отправляет данные
@@ -100,6 +108,7 @@ func (c *Client) send(data []metrics.Metrics) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Encoding", "gzip")
+	req.Header.Set("X-Real-IP", c.hostIP)
 	if c.addKey {
 		req.Header.Set("HashSHA256", utils.Hash(bodyJSON))
 	}
