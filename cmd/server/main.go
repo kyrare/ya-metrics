@@ -65,7 +65,7 @@ func main() {
 	}()
 
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sigs
 		err := storage.StoreAndClose()
@@ -80,7 +80,7 @@ func main() {
 	err = service.Run()
 
 	if err != nil {
-		fmt.Println(err)
+		sugar.Fatal(err)
 	}
 }
 

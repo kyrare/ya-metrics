@@ -7,7 +7,11 @@ import (
 
 // GetParameter функция хелпер для получения параметра, в первую очередь берет значение из параметров из командной строки
 // во вторую очередь берет значение из окружения
-func GetParameter(flagName string, envName string, defaultValue string, usage string) *string {
+func GetParameter(flagName string, envName string, configValue, defaultValue string, usage string) *string {
+	if configValue != "" {
+		defaultValue = configValue
+	}
+
 	v := flag.String(flagName, defaultValue, usage)
 
 	if envName != "" {
