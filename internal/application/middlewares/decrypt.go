@@ -25,6 +25,7 @@ func Decrypt(h http.Handler, cryptoKey string, logger zap.SugaredLogger) http.Ha
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		defer r.Body.Close()
 
 		data, err = encrypt.Decrypt(data, cryptoKey)
 		if err != nil {
