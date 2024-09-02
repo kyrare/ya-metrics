@@ -36,12 +36,22 @@ func main() {
 	sugar := *logger.Sugar()
 
 	s := agentStorage.NewMemStorage()
-	cl, err := client.NewClient(config.Address, config.AddKey, config.RateLimit, config.CryptoKey, sugar)
+
+	var cl client.Client
+
+	if config.UseGRPC {
+		sugar.Info("Agent use gRPC")
+		cl, err = client.NewGRPCClient(config.Address, sugar)
+	} else {
+		sugar.Info("Agent use HTTP")
+		cl, err = client.NewHTTPClient(config.Address, config.AddKey, config.RateLimit, config.CryptoKey, sugar)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer cl.Close()
 
-	service := agent.NewAgent(config, s, *cl, sugar)
+	service := agent.NewAgent(config, s, cl, sugar)
 
 	service.Run()
 }

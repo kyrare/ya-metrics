@@ -4,12 +4,17 @@ package server
 
 import (
 	"database/sql"
+	"net"
 	"net/http"
 	"time"
+
+	"github.com/kyrare/ya-metrics/internal/application/server"
+	pb "github.com/kyrare/ya-metrics/internal/infrastructure/proto"
 
 	"github.com/kyrare/ya-metrics/internal/application/handlers"
 	"github.com/kyrare/ya-metrics/internal/infrastructure/metrics"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type Server struct {
@@ -30,9 +35,33 @@ func (s *Server) Run() error {
 
 	s.storageStore()
 
-	r := handlers.ServerRouter(s.Storage, s.DB, s.Config.StoreInterval == 0, s.Config.CheckKey, s.Config.CryptoKey, s.Config.TrustedSubnet, s.Logger)
+	if s.Config.UseGRPC {
+		// определяем порт для сервера
+		listen, err := net.Listen("tcp", s.Config.Address)
+		if err != nil {
+			return err
+		}
+		// создаём gRPC-сервер без зарегистрированной службы
+		gRPCServer := grpc.NewServer()
+		// регистрируем сервис
+		// todo по хорошему тут нужны еще серверы по остальному апи который предоставляется по HTTP,
+		// 		но из-за нехватки времени сделал только минимум который требуется для агента
+		pb.RegisterMetricsServer(gRPCServer, server.NewMetricsServer(s.Storage, s.DB, s.Logger))
 
-	return http.ListenAndServe(s.Config.Address, r)
+		s.Logger.Info("Start gRPC server")
+		// получаем запрос gRPC
+		if err := gRPCServer.Serve(listen); err != nil {
+			return err
+		}
+	} else {
+		s.Logger.Info("Start HTTP server")
+
+		r := handlers.ServerRouter(s.Storage, s.DB, s.Config.StoreInterval == 0, s.Config.CheckKey, s.Config.CryptoKey, s.Config.TrustedSubnet, s.Logger)
+
+		return http.ListenAndServe(s.Config.Address, r)
+	}
+
+	return nil
 }
 
 func (s *Server) storageStore() {

@@ -1,6 +1,10 @@
 package metrics
 
-import "fmt"
+import (
+	"fmt"
+
+	pb "github.com/kyrare/ya-metrics/internal/infrastructure/proto"
+)
 
 type MetricType string
 
@@ -33,4 +37,49 @@ func NewMetrics(metricType MetricType, metric string, value float64) (*Metrics, 
 	}
 
 	return m, nil
+}
+
+func FromGRPC(m Metrics) *pb.Metric {
+	var t pb.Metric_MType
+	if m.MType == string(TypeGauge) {
+		t = pb.Metric_GAUGE
+	}
+	if m.MType == string(TypeCounter) {
+		t = pb.Metric_COUNTER
+	}
+
+	var delta int64
+	if m.Delta != nil {
+		delta = *m.Delta
+	}
+
+	var value float64
+	if m.Value != nil {
+		value = *m.Value
+	}
+
+	return &pb.Metric{
+		Id:    m.ID,
+		MType: t,
+		Delta: delta,
+		Value: value,
+	}
+}
+
+func ToGRPC(m *pb.Metric) Metrics {
+	var t MetricType
+
+	if m.MType == pb.Metric_GAUGE {
+		t = TypeGauge
+	}
+	if m.MType == pb.Metric_COUNTER {
+		t = TypeCounter
+	}
+
+	return Metrics{
+		ID:    m.Id,
+		MType: string(t),
+		Delta: &m.Delta,
+		Value: &m.Value,
+	}
 }
