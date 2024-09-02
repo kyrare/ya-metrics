@@ -33,7 +33,7 @@ func NewMetricsServer(storage metrics.Storage, db *sql.DB, logger zap.SugaredLog
 func (s MetricsServer) AddMetrics(ctx context.Context, in *pb.AddMetricsRequest) (*pb.AddMetricsResponse, error) {
 	var response pb.AddMetricsResponse
 
-	if in.Metrics == nil || len(in.Metrics) == 0 {
+	if len(in.Metrics) == 0 {
 		return &response, status.Errorf(codes.InvalidArgument, "metrics required")
 	}
 
