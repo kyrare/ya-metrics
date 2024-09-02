@@ -3,7 +3,6 @@ package handlers
 
 import (
 	"database/sql"
-	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kyrare/ya-metrics/internal/application/middlewares"
@@ -29,17 +28,14 @@ func NewHandler(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkK
 	}
 }
 
-func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, cryptoKey string, logger zap.SugaredLogger) chi.Router {
+func ServerRouter(storage metrics.Storage, DB *sql.DB, storeDataOnHit bool, checkKey bool, cryptoKey string, trustedSubnet string, logger zap.SugaredLogger) chi.Router {
 	r := chi.NewRouter()
 
 	h := NewHandler(storage, DB, storeDataOnHit, checkKey, logger)
 
-	r.Use(func(handler http.Handler) http.Handler {
-		return middlewares.WithLogging(handler, logger)
-	})
-	r.Use(func(handler http.Handler) http.Handler {
-		return middlewares.Decrypt(handler, cryptoKey, logger)
-	})
+	r.Use(middlewares.CheckIPAddress(trustedSubnet, logger))
+	r.Use(middlewares.WithLogging(logger))
+	r.Use(middlewares.Decrypt(cryptoKey, logger))
 	r.Use(middlewares.Compress)
 	r.Use(middlewares.Decompress)
 	//r.Mount("/debug", middleware.Profiler())

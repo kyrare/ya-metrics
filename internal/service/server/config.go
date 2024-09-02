@@ -20,6 +20,8 @@ type Config struct {
 	DatabaseDsn     string
 	CheckKey        bool
 	CryptoKey       string
+	TrustedSubnet   string
+	UseGRPC         bool
 }
 
 type configFile struct {
@@ -31,6 +33,8 @@ type configFile struct {
 	CryptoKey     string `json:"crypto_key,omitempty"`
 	Key           string `json:"key,omitempty"`
 	AppEnv        string `json:"app_env,omitempty"`
+	TrustedSubnet string `json:"trusted_subnet,omitempty"`
+	UseGRPC       string `json:"use_grpc,omitempty"`
 }
 
 // LoadConfig загружает конфиг для сервера
@@ -50,6 +54,8 @@ func LoadConfig() (Config, error) {
 	databaseDsn := utils.GetParameter("d", "DATABASE_DSN", cf.DatabaseDsn, "", "Строка с адресом подключения к БД")
 	key := utils.GetParameter("k", "KEY", cf.Key, "", "Проверять заголовок с хешом")
 	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", cf.CryptoKey, "", "Путь до файла с приватным ключом")
+	trustedSubnet := utils.GetParameter("t", "TRUSTED_SUBNET", cf.TrustedSubnet, "", "Разрешенные IP адреса (CIDR)")
+	useGRPC := utils.GetParameter("grpc", "USE_GRPC", cf.UseGRPC, "", "Использовать протокол gRPC")
 
 	storeInterval, err := strconv.Atoi(*storeIntervalStr)
 	if err != nil {
@@ -67,6 +73,8 @@ func LoadConfig() (Config, error) {
 		DatabaseDsn:     *databaseDsn,
 		CheckKey:        *key != "",
 		CryptoKey:       *cryptoKey,
+		TrustedSubnet:   *trustedSubnet,
+		UseGRPC:         *useGRPC != "",
 	}, nil
 }
 

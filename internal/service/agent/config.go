@@ -19,6 +19,7 @@ type Config struct {
 	AddKey         bool
 	RateLimit      uint64
 	CryptoKey      string
+	UseGRPC        bool
 }
 
 type configFile struct {
@@ -29,6 +30,7 @@ type configFile struct {
 	AppEnv         string `json:"app_env,omitempty"`
 	RateLimit      string `json:"rate_limit,omitempty"`
 	CryptoKey      string `json:"crypto_key,omitempty"`
+	UseGRPC        string `json:"use_grpc,omitempty"`
 }
 
 // LoadConfig загружает конфиг для агента
@@ -47,6 +49,7 @@ func LoadConfig() (Config, error) {
 	key := utils.GetParameter("k", "KEY", cf.Key, "", "Добавлять заголовок с хешом")
 	rateLimitStr := utils.GetParameter("l", "RATE_LIMIT", cf.RateLimit, "1", "Количество одновременно исходящих запросов на сервер")
 	cryptoKey := utils.GetParameter("crypto-key", "CRYPTO_KEY", cf.CryptoKey, "", "Путь до файла с публичным ключом")
+	useGRPC := utils.GetParameter("grpc", "USE_GRPC", cf.UseGRPC, "", "Использовать протокол gRPC")
 
 	flag.Parse()
 
@@ -73,6 +76,7 @@ func LoadConfig() (Config, error) {
 		AddKey:         *key != "",
 		RateLimit:      uint64(rateLimit),
 		CryptoKey:      *cryptoKey,
+		UseGRPC:        *useGRPC != "",
 	}, nil
 }
 

@@ -21,7 +21,7 @@ func TestHandler_Get(t *testing.T) {
 	db, err := connection.New("", sugar)
 	assert.NoError(t, err, "Не удалось создать соединение с БД")
 
-	ts := httptest.NewServer(ServerRouter(storage, db, false, false, "", sugar))
+	ts := httptest.NewServer(ServerRouter(storage, db, false, false, "", "", sugar))
 	defer ts.Close()
 
 	type want struct {
